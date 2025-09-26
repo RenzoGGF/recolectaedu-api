@@ -1,0 +1,38 @@
+package com.recolectaedu.model;
+
+
+import jakarta.persistence.*;
+import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Data
+@Entity
+@Table(name = "Foro")
+public class Foro {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id_foro;
+
+    @Column(name = "Título", nullable = false, length = 255)
+    private String titulo;
+
+    @Lob
+    @Column(nullable = false)
+    private String contenido;
+
+    @CreationTimestamp
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime creado_el;
+
+    @UpdateTimestamp
+    @Column(nullable = false)
+    private LocalDateTime actualizado_el;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_usuario", nullable = false)
+    private Usuario usuario;
+}
