@@ -2,17 +2,14 @@ package com.recolectaedu.service;
 
 import com.recolectaedu.repository.ForoRepository;
 import com.recolectaedu.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ForoService {
 
-    @Autowired
-    private ForoRepository foroRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
+    private final ForoRepository foroRepository;
+    private final UsuarioRepository usuarioRepository;
 
 }

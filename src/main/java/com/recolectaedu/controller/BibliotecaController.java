@@ -1,15 +1,15 @@
 package com.recolectaedu.controller;
 
 import com.recolectaedu.service.BibliotecaService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/bibliotecas")
+@RequestMapping("/bibliotecas")
+@RequiredArgsConstructor
 public class BibliotecaController {
 
-    @Autowired
-    private BibliotecaService bibliotecaService;
+    private final BibliotecaService bibliotecaService;
 
 }

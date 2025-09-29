@@ -3,19 +3,15 @@ package com.recolectaedu.service;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class ResenaService {
 
-    @Autowired
-    private ResenaRepository resenaRepository;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private RecursoRepository recursoRepository;
+    private final ResenaRepository resenaRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final RecursoRepository recursoRepository;
 
 }

@@ -1,15 +1,15 @@
 package com.recolectaedu.controller;
 
 import com.recolectaedu.service.ComentarioService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/comentarios") // O podría anidarse bajo /foros/{foroId}/comentarios
+@RequestMapping("/comentarios")
+@RequiredArgsConstructor
 public class ComentarioController {
 
-    @Autowired
-    private ComentarioService comentarioService;
+    private final ComentarioService comentarioService;
 
 }

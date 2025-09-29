@@ -3,19 +3,15 @@ package com.recolectaedu.service;
 import com.recolectaedu.repository.BibliotecaRepository;
 import com.recolectaedu.repository.BibliotecasRecursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 @Service
+@RequiredArgsConstructor
 public class BibliotecaService {
 
-    @Autowired
-    private BibliotecaRepository bibliotecaRepository;
-
-    @Autowired
-    private BibliotecasRecursoRepository bibliotecasRecursoRepository;
-
-    @Autowired
-    private RecursoRepository recursoRepository;
+    private final BibliotecaRepository bibliotecaRepository;
+    private final BibliotecasRecursoRepository bibliotecasRecursoRepository;
+    private final RecursoRepository recursoRepository;
 
 }
