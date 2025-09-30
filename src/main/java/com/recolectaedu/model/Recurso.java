@@ -25,10 +25,8 @@ public class Recurso {
     @Column(name = "Descripción", nullable = false, length = 255)
     private String descripcion;
 
-
-
     @Lob
-    @Column(nullable = false)
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String contenido;
 
     @Enumerated(EnumType.STRING)
