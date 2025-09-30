@@ -1,7 +1,12 @@
 package com.recolectaedu.repository;
 
+import com.recolectaedu.model.Biblioteca;
 import com.recolectaedu.model.BibliotecasRecurso;
+import com.recolectaedu.model.Recurso;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface BibliotecasRecursoRepository extends JpaRepository<BibliotecasRecurso, Integer> {
+    boolean existsByBibliotecaAndRecurso(Biblioteca biblioteca, Recurso recurso);
 }
