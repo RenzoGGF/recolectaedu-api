@@ -74,6 +74,40 @@ public class BibliotecaService {
                 .toList();
     }
 
+    // Para eliminar un item de la biblioteca cuando se tiene el idBibliotecaRecurso
+    // en el listado de la biblioteca
+    @Transactional
+    public void eliminarItem(Integer idUsuario, Integer idBibliotecaRecurso) {
+        var biblioteca = bibliotecaRepository.findBibliotecaByUsuarioId(idUsuario)
+                .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        var br = bibliotecasRecursoRepository.findById(idBibliotecaRecurso)
+                .orElseThrow(() -> new ResourceNotFoundException("Item de biblioteca no encontrado"));
+
+        // Solo se pueden eliminar items de una biblioteca propia
+        if (!br.getBiblioteca().getId_biblioteca().equals(biblioteca.getId_biblioteca())) {
+            throw new BusinessRuleException("No puedes eliminar items de otra biblioteca");
+        }
+
+        bibliotecasRecursoRepository.delete(br);
+    }
+
+    // Para eliminar un item de la biblioteca con el id del recurso y el usuario
+    @Transactional
+    public void eliminarPorRecurso(Integer idUsuario, Integer idRecurso) {
+        var biblioteca = bibliotecaRepository.findBibliotecaByUsuarioId(idUsuario)
+                .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        var recurso = recursoRepository.findById(idRecurso)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        var brOpt = bibliotecasRecursoRepository.findByBibliotecaAndRecurso(biblioteca, recurso);
+        if (brOpt.isEmpty()) {
+            throw new ResourceNotFoundException("El recurso no está en la biblioteca");
+        }
+        bibliotecasRecursoRepository.delete(brOpt.get());
+    }
+
     private BibliotecaItemResponseDTO toDto(BibliotecasRecurso br) {
         String agregadoEl = br.getAgregado_el() != null
                 ? br.getAgregado_el().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
@@ -85,5 +119,4 @@ public class BibliotecaService {
                 .agregado_el(agregadoEl)
                 .build();
     }
-
 }

@@ -31,7 +31,26 @@ public class BibliotecaController {
     }
 
     @GetMapping("/items")
-    public ResponseEntity<List<BibliotecaItemResponseDTO>> listarItems(@PathVariable Integer id_usuario) {
+    public ResponseEntity<List<BibliotecaItemResponseDTO>> listarItems(
+            @PathVariable Integer id_usuario) {
         return ResponseEntity.ok(bibliotecaService.listarRecursos(id_usuario));
+    }
+
+    // Eliminar item conociendo el id biblioteca recurso y usuario
+    @DeleteMapping("/items/{id_biblioteca_recurso}")
+    public ResponseEntity<Void> eliminarItem(
+            @PathVariable Integer id_usuario,
+            @PathVariable Integer id_biblioteca_recurso) {
+        bibliotecaService.eliminarItem(id_usuario, id_biblioteca_recurso);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Eliminar conociendo el id del recurso y el usuario
+    @DeleteMapping("/recursos/{id_recurso}")
+    public ResponseEntity<Void> eliminarPorRecurso(
+            @PathVariable Integer id_usuario,
+            @PathVariable Integer id_recurso) {
+        bibliotecaService.eliminarPorRecurso(id_usuario, id_recurso);
+        return ResponseEntity.noContent().build();
     }
 }
