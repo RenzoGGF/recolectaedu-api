@@ -16,4 +16,5 @@ public class RecursoResponse {
     private LocalDateTime creado_el;
     private Integer id_usuario;
     private Integer id_curso;
+    private String autorNombre;
 }

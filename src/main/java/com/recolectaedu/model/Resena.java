@@ -18,7 +18,6 @@ public class Resena {
     @Column(name = "Título", nullable = false, length = 255)
     private String titulo;
 
-    @Lob
     private String contenido;
 
     @Column(nullable = false)

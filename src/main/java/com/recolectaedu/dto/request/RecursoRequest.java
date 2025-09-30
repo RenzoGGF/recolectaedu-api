@@ -11,7 +11,7 @@ public class RecursoRequest {
     private String contenido;
     private FormatoRecurso formato;
     private Tipo_recurso tipo;
-    private Integer año;
+    private Integer ano;
     private Integer periodo;
     private Integer id_usuario;
     private Integer id_curso;
