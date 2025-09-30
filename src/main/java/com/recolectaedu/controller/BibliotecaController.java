@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
 @RequestMapping("/usuarios/{id_usuario}/biblioteca")
@@ -27,5 +28,10 @@ public class BibliotecaController {
         return ResponseEntity.created(
                         URI.create("/usuarios/" + id_usuario + "/biblioteca/items/" + resp.id_biblioteca_recurso()))
                 .body(resp);
+    }
+
+    @GetMapping("/items")
+    public ResponseEntity<List<BibliotecaItemResponseDTO>> listarItems(@PathVariable Integer id_usuario) {
+        return ResponseEntity.ok(bibliotecaService.listarRecursos(id_usuario));
     }
 }
