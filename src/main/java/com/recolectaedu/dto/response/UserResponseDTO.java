@@ -3,9 +3,9 @@ package com.recolectaedu.dto.response;
 import lombok.Data;
 
 @Data
-public class UserResponse {
+public class UserResponseDTO {
     private Integer id_usuario;
     private String email;
     private String rol;
-    private PerfilResponse perfil;
+    private PerfilResponseDTO perfil;
 }

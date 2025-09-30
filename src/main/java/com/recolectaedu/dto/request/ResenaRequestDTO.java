@@ -1,11 +1,11 @@
-package com.recolectaedu.dto.response;
+package com.recolectaedu.dto.request;
 
 import lombok.Data;
 
 @Data
-public class ResenaResponse {
-    private Integer id_reseña;
+public class ResenaRequestDTO {
     private String titulo;
+    private String contenido;
     private Boolean es_positivo;
     private Integer id_usuario;
     private Integer id_recurso;
