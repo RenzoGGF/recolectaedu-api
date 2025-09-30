@@ -1,12 +1,17 @@
 package com.recolectaedu.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+
 import java.util.Set;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "Biblioteca")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class Biblioteca {
 
     @Id

@@ -3,7 +3,7 @@ package com.recolectaedu.dto.request;
 import lombok.Data;
 
 @Data
-public class PerfilRequest {
+public class PerfilRequestDTO {
     private String nombre;
     private String apellidos;
     private Short ciclo;

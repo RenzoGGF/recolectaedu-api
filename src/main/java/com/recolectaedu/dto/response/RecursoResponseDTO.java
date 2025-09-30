@@ -1,18 +1,19 @@
-package com.recolectaedu.dto.request;
+package com.recolectaedu.dto.response;
 
 import com.recolectaedu.model.enums.FormatoRecurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
 import lombok.Data;
+import java.time.LocalDateTime;
 
 @Data
-public class RecursoRequest {
+public class RecursoResponseDTO {
+    private Integer id_recurso;
     private String titulo;
     private String descripcion;
     private String contenido;
     private FormatoRecurso formato;
     private Tipo_recurso tipo;
-    private Integer año;
-    private Integer periodo;
+    private LocalDateTime creado_el;
     private Integer id_usuario;
     private Integer id_curso;
 }
