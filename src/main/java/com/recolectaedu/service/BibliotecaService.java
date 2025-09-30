@@ -1,5 +1,6 @@
 package com.recolectaedu.service;
 
+import com.recolectaedu.dto.request.BibliotecaItemCreateRequestDTO;
 import com.recolectaedu.dto.response.BibliotecaItemResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
@@ -43,13 +44,13 @@ public class BibliotecaService {
     }
 
     @Transactional
-    public BibliotecaItemResponseDTO guardarRecursoEnBiblioteca(Integer id_usuario, BibliotecaItemResponseDTO request) {
+    public BibliotecaItemResponseDTO guardarRecursoEnBiblioteca(Integer id_usuario, BibliotecaItemCreateRequestDTO request) {
         Biblioteca biblioteca = obtenerOCrearBibliotecaUsuario(id_usuario);
 
         Recurso recurso = recursoRepository.findById(request.id_recurso())
                 .orElseThrow(() -> new ResourceNotFoundException("El recurso no existe."));
 
-        // No puden existir recursos duplicados en una biblioteca
+        // No pueden existir recursos duplicados en una biblioteca
         if (bibliotecasRecursoRepository.existsByBibliotecaAndRecurso(biblioteca, recurso)) {
             throw new BusinessRuleException("El recurso ya se encuentra en la biblioteca.");
         }
