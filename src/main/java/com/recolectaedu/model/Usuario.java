@@ -23,4 +23,7 @@ public class Usuario {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Rol rol;
+
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Perfil perfil;
 }
