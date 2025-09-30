@@ -1,13 +1,17 @@
 package com.recolectaedu.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "Biblioteca_recurso")
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class BibliotecasRecurso {
 
     @Id
