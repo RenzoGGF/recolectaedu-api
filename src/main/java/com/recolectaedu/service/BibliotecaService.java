@@ -11,14 +11,14 @@ import com.recolectaedu.repository.BibliotecaRepository;
 import com.recolectaedu.repository.BibliotecasRecursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.UsuarioRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import com.recolectaedu.model.Usuario;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -62,15 +62,28 @@ public class BibliotecaService {
                         .build()
         );
 
-        String agregado_el = guardado.getAgregado_el() != null
-                ? guardado.getAgregado_el().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
-                : OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+        return toDto(guardado);
+    }
 
+    @Transactional(readOnly = true)
+    public List<BibliotecaItemResponseDTO> listarRecursos(Integer userId) {
+        var biblioteca = bibliotecaRepository.findBibliotecaByUsuarioId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+        return bibliotecasRecursoRepository.findByBiblioteca(biblioteca)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    private BibliotecaItemResponseDTO toDto(BibliotecasRecurso br) {
+        String agregadoEl = br.getAgregado_el() != null
+                ? br.getAgregado_el().atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+                : null;
         return BibliotecaItemResponseDTO.builder()
-                .id_biblioteca_recurso(guardado.getId_biblioteca_recurso())
-                .id_recurso(guardado.getRecurso().getId_recurso())
-                .titulo_recurso(guardado.getRecurso().getTitulo())
-                .agregado_el(agregado_el)
+                .id_biblioteca_recurso(br.getId_biblioteca_recurso())
+                .id_recurso(br.getRecurso().getId_recurso())
+                .titulo_recurso(br.getRecurso().getTitulo())
+                .agregado_el(agregadoEl)
                 .build();
     }
 
