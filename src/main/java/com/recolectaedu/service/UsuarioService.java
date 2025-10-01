@@ -1,7 +1,7 @@
 package com.recolectaedu.service;
 
-import com.recolectaedu.dto.request.PerfilRequest;
-import com.recolectaedu.dto.request.UserRequest;
+import com.recolectaedu.dto.request.PerfilRequestDTO;
+import com.recolectaedu.dto.request.UserRequestDTO;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.PerfilRepository;
 import com.recolectaedu.repository.UsuarioRepository;
@@ -15,7 +15,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PerfilRepository perfilRepository;
 
-    public Usuario registrarUsuario(UserRequest userRequest) {
+    public Usuario registrarUsuario(UserRequestDTO userRequestDTO) {
 
         return null;
     }
@@ -25,7 +25,7 @@ public class UsuarioService {
         return null;
     }
 
-    public Usuario actualizarPerfil(Integer id, PerfilRequest perfilRequest) {
+    public Usuario actualizarPerfil(Integer id, PerfilRequestDTO perfilRequestDTO) {
         return null;
     }
 

@@ -3,9 +3,9 @@ package com.recolectaedu.dto.request;
 import lombok.Data;
 
 @Data
-public class UserRequest {
+public class UserRequestDTO {
     private String email;
     private String password;
-    private PerfilRequest perfil;
+    private PerfilRequestDTO perfil;
 }
 
