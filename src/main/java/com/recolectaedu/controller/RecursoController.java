@@ -1,6 +1,6 @@
 package com.recolectaedu.controller;
 
-import com.recolectaedu.dto.response.RecursoResponse;
+import com.recolectaedu.dto.response.RecursoResponseDTO;
 import com.recolectaedu.service.RecursoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,13 +17,13 @@ public class RecursoController {
 
     // Endpoint para US-12
     @GetMapping("/curso/{cursoId}/recientes")
-    public ResponseEntity<List<RecursoResponse>> findRecientesByCurso(@PathVariable Integer cursoId) {
-        List<RecursoResponse> response = recursoService.findRecientesByCurso(cursoId);
+    public ResponseEntity<List<RecursoResponseDTO>> findRecientesByCurso(@PathVariable Integer cursoId) {
+        List<RecursoResponseDTO> response = recursoService.findRecientesByCurso(cursoId);
         return ResponseEntity.ok(response);
     }
     // Endpoint para US-9 y US-10
     @GetMapping
-    public ResponseEntity<List<RecursoResponse>> searchRecursos(
+    public ResponseEntity<List<RecursoResponseDTO>> searchRecursos(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer cursoId,
             @RequestParam(required = false) String tipo,
@@ -32,7 +32,7 @@ public class RecursoController {
             @RequestParam(required = false) Integer calificacionMinima,
             @RequestParam(required = false) String ordenarPor
     ) {
-        List<RecursoResponse> response = recursoService.searchRecursos(keyword, cursoId, tipo, autor, universidad, calificacionMinima, ordenarPor);
+        List<RecursoResponseDTO> response = recursoService.searchRecursos(keyword, cursoId, tipo, autor, universidad, calificacionMinima, ordenarPor);
         return ResponseEntity.ok(response);
     }
 

@@ -1,6 +1,6 @@
 package com.recolectaedu.service;
 
-import com.recolectaedu.dto.response.RecursoResponse;
+import com.recolectaedu.dto.response.RecursoResponseDTO;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
@@ -23,38 +23,18 @@ public class RecursoService {
     private final CursoRepository cursoRepository;
 
     // US-12
-    public List<RecursoResponse> findRecientesByCurso(Integer cursoId) {
+    public List<RecursoResponseDTO> findRecientesByCurso(Integer cursoId) {
         if (!cursoRepository.existsById(cursoId)) {
             throw new ResourceNotFoundException("El curso con ID " + cursoId + " no fue encontrado.");
         }
 
         List<Recurso> recursos = recursoRepository.findRecursosRecientesPorCurso(cursoId);
 
-        return recursos.stream()
-                .map(recurso -> {
-                    RecursoResponse response = new RecursoResponse();
-                    response.setId_recurso(recurso.getId_recurso());
-                    response.setTitulo(recurso.getTitulo());
-                    response.setDescripcion(recurso.getDescripcion());
-                    response.setContenido(recurso.getContenido());
-                    response.setFormato(recurso.getFormato());
-                    response.setTipo(recurso.getTipo());
-                    response.setCreado_el(recurso.getCreado_el());
-                    response.setId_usuario(recurso.getUsuario().getId_usuario());
-                    response.setId_curso(recurso.getCurso().getId_curso());
-
-                    String autorNombre = "Anónimo";
-                    if (recurso.getUsuario() != null && recurso.getUsuario().getPerfil() != null) {
-                        autorNombre = recurso.getUsuario().getPerfil().getNombre();
-                    }
-                    response.setAutorNombre(autorNombre);
-
-                    return response;
-                }).collect(Collectors.toList());
+        return getRecursoResponseDTOS(recursos);
     }
 
     // US - 9 y 10
-    public List<RecursoResponse> searchRecursos(String keyword, Integer cursoId, String tipo, String autor, String universidad, Integer calificacionMinima, String ordenarPor) {
+    public List<RecursoResponseDTO> searchRecursos(String keyword, Integer cursoId, String tipo, String autor, String universidad, Integer calificacionMinima, String ordenarPor) {
         Tipo_recurso tipoEnum = null;
         if (tipo != null && !tipo.isEmpty()) {
             try {
@@ -80,8 +60,12 @@ public class RecursoService {
                 sort
         );
 
+        return getRecursoResponseDTOS(recursos);
+    }
+
+    private List<RecursoResponseDTO> getRecursoResponseDTOS(List<Recurso> recursos) {
         return recursos.stream().map(recurso -> {
-            RecursoResponse response = new RecursoResponse();
+            RecursoResponseDTO response = new RecursoResponseDTO();
             response.setId_recurso(recurso.getId_recurso());
             response.setTitulo(recurso.getTitulo());
             response.setDescripcion(recurso.getDescripcion());
