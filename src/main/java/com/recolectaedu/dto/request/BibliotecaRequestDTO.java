@@ -1,8 +1,8 @@
 package com.recolectaedu.dto.request;
 
-import lombok.Data;
+public record BibliotecaRequestDTO(
+         Integer id_usuario,
+         String nombre
+) {
 
-@Data
-public class BibliotecaRequestDTO {
-    private Integer id_recurso;
 }

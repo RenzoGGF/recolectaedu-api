@@ -15,6 +15,7 @@ import com.recolectaedu.model.Usuario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -43,23 +44,26 @@ public class BibliotecaService {
     }
 
     @Transactional
-    public BibliotecaItemResponseDTO guardarRecursoEnBiblioteca(Integer id_usuario, BibliotecaItemCreateRequestDTO request) {
-        Biblioteca biblioteca = obtenerOCrearBibliotecaUsuario(id_usuario);
+    public BibliotecaItemResponseDTO guardarRecursoEnBiblioteca(BibliotecaItemCreateRequestDTO request) {
+        //Biblioteca biblioteca = obtenerOCrearBibliotecaUsuario(id_usuario);
 
         Recurso recurso = recursoRepository.findById(request.id_recurso())
                 .orElseThrow(() -> new ResourceNotFoundException("El recurso no existe."));
 
-        // No pueden existir recursos duplicados en una biblioteca
-        if (bibliotecasRecursoRepository.existsByBibliotecaAndRecurso(biblioteca, recurso)) {
-            throw new BusinessRuleException("El recurso ya se encuentra en la biblioteca.");
-        }
+        Biblioteca biblioteca = bibliotecaRepository.findById(request.id_biblioteca())
+                .orElseThrow(() -> new ResourceNotFoundException("El biblioteca no existe."));
 
-        BibliotecasRecurso guardado = bibliotecasRecursoRepository.save(
-                BibliotecasRecurso.builder()
-                        .biblioteca(biblioteca)
-                        .recurso(recurso)
-                        .build()
-        );
+        // No pueden existir recursos duplicados en una biblioteca
+        /*if (bibliotecasRecursoRepository.existsByBibliotecaAndRecurso(biblioteca, recurso)) {
+            throw new BusinessRuleException("El recurso ya se encuentra en la biblioteca.");
+        }*/
+
+        BibliotecasRecurso bibliotecasRecurso =new BibliotecasRecurso();
+        bibliotecasRecurso.setBiblioteca(biblioteca);
+        bibliotecasRecurso.setRecurso(recurso);
+        bibliotecasRecurso.setAgregado_el(LocalDateTime.now());
+
+        BibliotecasRecurso guardado = bibliotecasRecursoRepository.save(bibliotecasRecurso);
 
         return toDto(guardado);
     }
@@ -114,7 +118,7 @@ public class BibliotecaService {
                 : null;
         return BibliotecaItemResponseDTO.builder()
                 .id_biblioteca_recurso(br.getId_biblioteca_recurso())
-                .id_recurso(br.getRecurso().getId_recurso())
+                .nombre_recurso(br.getRecurso().getTitulo())
                 .titulo_recurso(br.getRecurso().getTitulo())
                 .agregado_el(agregadoEl)
                 .build();

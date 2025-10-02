@@ -25,6 +25,5 @@ public class Biblioteca {
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)
     private Usuario usuario;
 
-    @OneToMany(mappedBy = "biblioteca")
-    private Set<BibliotecasRecurso> bibliotecasRecursos;
+
 }

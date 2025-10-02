@@ -23,7 +23,7 @@ public class BibliotecaController {
             @PathVariable Integer id_usuario,
             @Valid @RequestBody BibliotecaItemCreateRequestDTO request) {
 
-        BibliotecaItemResponseDTO resp = bibliotecaService.guardarRecursoEnBiblioteca(id_usuario, request);
+        BibliotecaItemResponseDTO resp = bibliotecaService.guardarRecursoEnBiblioteca(request);
 
         return ResponseEntity.created(
                         URI.create("/usuarios/" + id_usuario + "/biblioteca/items/" + resp.id_biblioteca_recurso()))

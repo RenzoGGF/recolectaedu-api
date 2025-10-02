@@ -6,5 +6,6 @@ import lombok.Builder;
 @Builder
 public record BibliotecaItemCreateRequestDTO(
     @NotNull(message = "El Id del recurso no puede estar vacío.")
-    Integer id_recurso
+    Integer id_recurso,
+    Integer id_biblioteca
 ) {}
