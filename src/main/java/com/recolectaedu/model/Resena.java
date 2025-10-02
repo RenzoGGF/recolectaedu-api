@@ -13,12 +13,11 @@ public class Resena {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id_reseña;
+    private Integer id_resena;
 
     @Column(name = "Título", nullable = false, length = 255)
     private String titulo;
 
-    @Lob
     private String contenido;
 
     @Column(nullable = false)

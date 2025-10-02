@@ -25,7 +25,7 @@ public class Recurso {
     @Column(name = "Descripción", nullable = false, length = 255)
     private String descripcion;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
+    @Column(columnDefinition ="TEXT", nullable = false)
     private String contenido;
 
     @Enumerated(EnumType.STRING)
@@ -37,7 +37,7 @@ public class Recurso {
     private Tipo_recurso tipo;
 
     @Column(name = "Año")
-    private Integer año;
+    private Integer ano;
 
     @Enumerated(EnumType.ORDINAL) // Guardará 0, 1, 2...
     private Periodo periodo;
