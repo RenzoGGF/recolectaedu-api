@@ -33,5 +33,5 @@ public class Perfil {
     private String carrera;
 
     @Column(nullable = false)
-    private String ciclo;
+    private Short ciclo;
 }
