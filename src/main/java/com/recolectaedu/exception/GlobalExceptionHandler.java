@@ -4,11 +4,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 // import java.net.URI;
 import java.util.stream.Collectors;
+import java.util.Locale;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -51,6 +53,31 @@ public class GlobalExceptionHandler {
         pd.setTitle("Error interno");
         pd.setDetail("Ha ocurrido un error inesperado: " + ex.getMessage());
         // pd.setType(URI.create("about:blank"));
+        return pd;
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ProblemDetail handleDataIntegrity(DataIntegrityViolationException ex) {
+        // PostgreSQL usa SQLState 23505 para 'unique_violation'
+        String root = ex.getMostSpecificCause() != null
+                ? ex.getMostSpecificCause().getMessage()
+                : ex.getMessage();
+
+        String detail = "Conflicto de datos";
+        if (root != null) {
+            String r = root.toLowerCase(Locale.ROOT);
+
+            if (r.contains("duplicate key") || r.contains("llave duplicada") || r.contains("23505")) {
+                detail = "El valor ya está registrado (violación de unicidad).";
+                if (r.contains("email")) {
+                    detail = "El email ya está registrado.";
+                }
+            }
+        }
+
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        pd.setTitle("Conflicto (duplicado)");
+        pd.setDetail(detail);
         return pd;
     }
 }
