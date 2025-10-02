@@ -1,11 +1,12 @@
 package com.recolectaedu.dto.response;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Data
+@AllArgsConstructor @Getter
 public class UserResponseDTO {
     private Integer id_usuario;
     private String email;
-    private String rol;
-    private PerfilResponseDTO perfil;
+    private String role;
+    private PerfilResponseDTO profile; // puede ser null
 }

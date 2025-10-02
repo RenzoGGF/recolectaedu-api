@@ -1,13 +1,16 @@
 package com.recolectaedu.model;
 
-
 import com.recolectaedu.model.enums.Rol;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
-@Data
 @Entity
-@Table(name = "usuario")
+@Table(name = "usuarios")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Usuario {
 
     @Id
@@ -24,6 +27,16 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol;
 
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    // Relación 1:1 con Perfil
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, optional = true, fetch = FetchType.LAZY, orphanRemoval = true)
     private Perfil perfil;
+
+    // Metodo helper para mantener consistencia
+    public void attachPerfil(Perfil perfil) {
+        this.perfil = perfil;
+        if (perfil != null) {
+            perfil.setUsuario(this);
+        }
+    }
 }

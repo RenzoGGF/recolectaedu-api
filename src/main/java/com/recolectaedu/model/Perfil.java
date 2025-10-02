@@ -1,12 +1,15 @@
 package com.recolectaedu.model;
 
-
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 
-@Data
 @Entity
-@Table(name = "Perfil")
+@Table(name = "perfiles")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Perfil {
 
     @Id
@@ -14,7 +17,7 @@ public class Perfil {
 
     @OneToOne(fetch = FetchType.LAZY)
     @MapsId
-    @JoinColumn(name = "id_usuario")
+    @JoinColumn(name = "id_usuario", foreignKey = @ForeignKey(name = "fk_perfil_usuario"))
     private Usuario usuario;
 
     @Column(nullable = false, length = 255)
@@ -23,12 +26,12 @@ public class Perfil {
     @Column(nullable = false, length = 255)
     private String apellidos;
 
-    @Column(nullable = false)
-    private Short ciclo;
+    @Column(nullable = false, length = 255)
+    private String universidad;
 
     @Column(nullable = false, length = 255)
     private String carrera;
 
-    @Column(nullable = false, length = 255)
-    private String universidad;
+    @Column(nullable = false)
+    private Short ciclo;
 }

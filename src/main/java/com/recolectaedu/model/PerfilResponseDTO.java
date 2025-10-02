@@ -1,18 +1,21 @@
-package com.recolectaedu.dto.request;
+package com.recolectaedu.dto.response;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class PerfilRequestDTO {
-    @NotBlank
-    @Size(max=255)
-    private String nombre;
+@Getter @Setter @AllArgsConstructor
+public class PerfilResponseDTO {
+    @NotBlank @Size(max=255)
+    private Integer id_usuario;
 
     @NotBlank @Size(max=255)
+    private String nombre;
+
+    @NotBlank
+    @Size(max=255)
     private String apellidos;
 
     @NotBlank @Size(max=255)
@@ -22,5 +25,5 @@ public class PerfilRequestDTO {
     private String carrera;
 
     @NotBlank @Size(max=10)
-    private String ciclo;
+    private Short ciclo;
 }
