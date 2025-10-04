@@ -1,8 +1,8 @@
 package com.recolectaedu.service;
 
 import com.recolectaedu.dto.request.PerfilRequestDTO;
-import com.recolectaedu.dto.request.UserRequestDTO;
 import com.recolectaedu.dto.response.PerfilResponseDTO;
+import com.recolectaedu.dto.request.UserRequestDTO;
 import com.recolectaedu.dto.response.UserResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
