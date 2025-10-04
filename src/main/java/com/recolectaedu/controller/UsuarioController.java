@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 // Por hacer: devolver un ResponseDTO sin password_hash
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/usuarios")
 @RequiredArgsConstructor
 public class UsuarioController {
 
