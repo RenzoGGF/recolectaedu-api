@@ -38,7 +38,7 @@ public class RecursoService {
         Tipo_recurso tipoEnum = null;
         if (tipo != null && !tipo.isEmpty()) {
             try {
-                tipoEnum = Tipo_recurso.valueOf(tipo.toUpperCase());
+                tipoEnum = Tipo_recurso.valueOf(tipo);
             } catch (IllegalArgumentException e) {
                 throw new IllegalArgumentException("Tipo de recurso inválido: " + tipo);
             }

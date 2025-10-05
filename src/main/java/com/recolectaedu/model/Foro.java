@@ -2,7 +2,7 @@ package com.recolectaedu.model;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
@@ -11,13 +11,18 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "Foro")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Foro {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_foro;
 
-    @Column(name = "Título", nullable = false, length = 255)
+    @Column(nullable = false,  length = 255)
     private String titulo;
 
     @Lob

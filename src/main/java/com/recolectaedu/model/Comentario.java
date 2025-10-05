@@ -1,7 +1,7 @@
 package com.recolectaedu.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
@@ -9,6 +9,11 @@ import java.util.List;
 @Data
 @Entity
 @Table(name = "Comentario")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Comentario {
 
     @Id
