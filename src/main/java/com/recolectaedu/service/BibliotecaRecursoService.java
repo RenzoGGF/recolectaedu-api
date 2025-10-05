@@ -69,10 +69,8 @@ public class BibliotecaRecursoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
         BibliotecaRecurso bibliotecaRecurso = bibliotecaRecursoRepository.findByBibliotecaAndRecurso(biblioteca, recurso)
-                        .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado en la biblioteca"));
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado en la biblioteca"));
 
         bibliotecaRecursoRepository.delete(bibliotecaRecurso);
     }
-
-
 }
