@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class BibliotecasRecurso {
+public class BibliotecaRecurso {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

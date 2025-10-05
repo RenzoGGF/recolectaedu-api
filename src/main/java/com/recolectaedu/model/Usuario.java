@@ -29,7 +29,7 @@ public class Usuario {
 
 
     // Relación 1:1 con Perfil
-    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, optional = true, fetch = FetchType.LAZY, orphanRemoval = true)
+    @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, optional = true, orphanRemoval = true)
     private Perfil perfil;
 
     // Metodo helper para mantener consistencia

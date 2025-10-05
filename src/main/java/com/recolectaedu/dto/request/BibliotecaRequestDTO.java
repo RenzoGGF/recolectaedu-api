@@ -1,8 +1,10 @@
 package com.recolectaedu.dto.request;
 
-import lombok.Data;
+import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 
-@Data
-public class BibliotecaRequestDTO {
-    private Integer id_recurso;
-}
+@Builder
+public record BibliotecaRequestDTO(
+        @NotNull(message = "El id del recurso no puede estar vacío.")
+        Integer id_usuario
+) {}
