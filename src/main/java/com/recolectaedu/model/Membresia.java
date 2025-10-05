@@ -3,18 +3,24 @@ package com.recolectaedu.model;
 
 import com.recolectaedu.model.enums.Plan;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Table(name = "Membresía")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Membresia {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id_membresía;
+    private Integer id_membresia;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

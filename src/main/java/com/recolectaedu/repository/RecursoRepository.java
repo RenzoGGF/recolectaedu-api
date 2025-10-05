@@ -25,12 +25,12 @@ public interface RecursoRepository extends JpaRepository<Recurso, Integer> {
             "LEFT JOIN u.perfil p " +
             "LEFT JOIN Resena res ON res.recurso = r " +
             "WHERE " +
-            "(:keyword IS NULL OR LOWER(r.titulo) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(r.descripcion) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+            "(:keyword IS NULL OR LOWER(CAST(r.titulo AS string)) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(CAST(r.descripcion AS string)) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
             "(:cursoId IS NULL OR c.id_curso = :cursoId) AND " +
             "(:tipoEnum IS NULL OR r.tipo = :tipoEnum) AND " +
-            "(:autorNombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :autorNombre, '%')) OR LOWER(p.apellidos) LIKE LOWER(CONCAT('%', :autorNombre, '%'))) AND " +
-            "(:universidad IS NULL OR LOWER(c.universidad) LIKE LOWER(CONCAT('%', :universidad, '%'))) " +
-            "GROUP BY r " +
+            "(:autorNombre IS NULL OR LOWER(CAST(p.nombre AS string)) LIKE LOWER(CONCAT('%', :autorNombre, '%')) OR LOWER(CAST(p.apellidos AS string)) LIKE LOWER(CONCAT('%', :autorNombre, '%'))) AND " +
+            "(:universidad IS NULL OR LOWER(CAST(c.universidad AS string)) LIKE LOWER(CONCAT('%', :universidad, '%'))) " +
+            "GROUP BY r.id_recurso " +
             "HAVING :calificacionMinima IS NULL OR " +
             "SUM(CASE WHEN res.es_positivo = true THEN 1 WHEN res.es_positivo = false THEN -1 ELSE 0 END) >= :calificacionMinima")
     List<Recurso> search(

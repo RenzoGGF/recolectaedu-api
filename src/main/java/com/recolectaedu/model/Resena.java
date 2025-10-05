@@ -1,7 +1,7 @@
 package com.recolectaedu.model;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
@@ -9,13 +9,18 @@ import java.time.LocalDateTime;
 @Data
 @Entity
 @Table(name = "Reseña")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Resena {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_resena;
 
-    @Column(name = "Título", nullable = false, length = 255)
+    @Column(nullable = false, length = 255)
     private String titulo;
 
     private String contenido;

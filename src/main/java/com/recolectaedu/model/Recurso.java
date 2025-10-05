@@ -4,7 +4,7 @@ import com.recolectaedu.model.enums.FormatoRecurso;
 import com.recolectaedu.model.enums.Periodo;
 import com.recolectaedu.model.enums.Tipo_recurso;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
@@ -13,16 +13,21 @@ import java.util.Set;
 @Data
 @Entity
 @Table(name = "Recurso")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Recurso {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_recurso;
 
-    @Column(name = "Título", nullable = false, length = 255)
+    @Column(nullable = false, length = 255,columnDefinition = "TEXT")
     private String titulo;
 
-    @Column(name = "Descripción", nullable = false, length = 255)
+    @Column( nullable = false, length = 255,columnDefinition = "TEXT")
     private String descripcion;
 
     @Column(columnDefinition ="TEXT", nullable = false)
@@ -36,7 +41,7 @@ public class Recurso {
     @Column(nullable = false)
     private Tipo_recurso tipo;
 
-    @Column(name = "Año")
+    @Column(nullable = false)
     private Integer ano;
 
     @Enumerated(EnumType.ORDINAL) // Guardará 0, 1, 2...
