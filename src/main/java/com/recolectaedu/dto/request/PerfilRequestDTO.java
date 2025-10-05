@@ -22,5 +22,5 @@ public class PerfilRequestDTO {
     private String carrera;
 
     @NotBlank @Size(max=10)
-    private String ciclo;
+    private Short ciclo;
 }
