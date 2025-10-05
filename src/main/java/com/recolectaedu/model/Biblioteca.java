@@ -3,8 +3,6 @@ package com.recolectaedu.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.Set;
-
 @Getter
 @Setter
 @Entity

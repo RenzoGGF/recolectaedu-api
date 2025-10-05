@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -22,7 +23,7 @@ public class BibliotecaRecursoService {
     private final BibliotecaRepository bibliotecaRepository;
     private final BibliotecaRecursoRepository bibliotecaRecursoRepository;
 
-    private BibliotecaItemResponseDTO toDTO(BibliotecaRecurso bibliotecaRecurso) {
+    private BibliotecaItemResponseDTO toDto(BibliotecaRecurso bibliotecaRecurso) {
         return BibliotecaItemResponseDTO.builder()
                 .id_biblioteca_recurso(bibliotecaRecurso.getId_biblioteca_recurso())
                 .titulo_recurso(bibliotecaRecurso.getRecurso().getTitulo())
@@ -46,6 +47,32 @@ public class BibliotecaRecursoService {
 
         BibliotecaRecurso guardado = bibliotecaRecursoRepository.save(bibliotecaRecurso);
 
-        return toDTO(guardado);
+        return toDto(guardado);
     }
+
+    @Transactional(readOnly = true)
+    public List<BibliotecaItemResponseDTO> listarRecursos(Integer id_biblioteca) {
+        Biblioteca biblioteca = bibliotecaRepository.findById(id_biblioteca)
+                .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+        return bibliotecaRecursoRepository.findByBiblioteca(biblioteca)
+                .stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional
+    public void eliminarRecurso(Integer id_biblioteca, Integer id_recurso) {
+        Biblioteca biblioteca = bibliotecaRepository.findById(id_biblioteca)
+                .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        Recurso recurso = recursoRepository.findById(id_recurso)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        BibliotecaRecurso bibliotecaRecurso = bibliotecaRecursoRepository.findByBibliotecaAndRecurso(biblioteca, recurso)
+                        .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado en la biblioteca"));
+
+        bibliotecaRecursoRepository.delete(bibliotecaRecurso);
+    }
+
+
 }
