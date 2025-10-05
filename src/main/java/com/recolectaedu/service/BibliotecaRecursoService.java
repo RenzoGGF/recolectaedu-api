@@ -1,7 +1,8 @@
 package com.recolectaedu.service;
 
-import com.recolectaedu.dto.request.BibliotecaItemCreateRequestDTO;
-import com.recolectaedu.dto.response.BibliotecaItemResponseDTO;
+import com.recolectaedu.dto.request.BibliotecaRecursoCreateRequestDTO;
+import com.recolectaedu.dto.response.BibliotecaRecursoResponseDTO;
+import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Biblioteca;
 import com.recolectaedu.model.BibliotecaRecurso;
@@ -23,8 +24,8 @@ public class BibliotecaRecursoService {
     private final BibliotecaRepository bibliotecaRepository;
     private final BibliotecaRecursoRepository bibliotecaRecursoRepository;
 
-    private BibliotecaItemResponseDTO toDto(BibliotecaRecurso bibliotecaRecurso) {
-        return BibliotecaItemResponseDTO.builder()
+    private BibliotecaRecursoResponseDTO toDto(BibliotecaRecurso bibliotecaRecurso) {
+        return BibliotecaRecursoResponseDTO.builder()
                 .id_biblioteca_recurso(bibliotecaRecurso.getId_biblioteca_recurso())
                 .titulo_recurso(bibliotecaRecurso.getRecurso().getTitulo())
                 .agregado_el(bibliotecaRecurso.getAgregado_el())
@@ -32,12 +33,17 @@ public class BibliotecaRecursoService {
     }
 
     @Transactional
-    public BibliotecaItemResponseDTO guardarRecursoEnBiblioteca(BibliotecaItemCreateRequestDTO request) {
+    public BibliotecaRecursoResponseDTO guardarRecursoEnBiblioteca(Integer id_biblioteca, BibliotecaRecursoCreateRequestDTO request) {
         Recurso recurso = recursoRepository.findById(request.id_recurso())
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
-        Biblioteca biblioteca = bibliotecaRepository.findById(request.id_biblioteca())
+        Biblioteca biblioteca = bibliotecaRepository.findById(id_biblioteca)
                 .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        // Verificar duplicidad
+        if (bibliotecaRecursoRepository.existsByBibliotecaAndRecurso(biblioteca, recurso)) {
+            throw new BusinessRuleException("No pueden existir duplicados en la biblioteca");
+        }
 
         BibliotecaRecurso bibliotecaRecurso = BibliotecaRecurso.builder()
                 .biblioteca(biblioteca)
@@ -51,7 +57,7 @@ public class BibliotecaRecursoService {
     }
 
     @Transactional(readOnly = true)
-    public List<BibliotecaItemResponseDTO> listarRecursos(Integer id_biblioteca) {
+    public List<BibliotecaRecursoResponseDTO> listarRecursos(Integer id_biblioteca) {
         Biblioteca biblioteca = bibliotecaRepository.findById(id_biblioteca)
                 .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
         return bibliotecaRecursoRepository.findByBiblioteca(biblioteca)

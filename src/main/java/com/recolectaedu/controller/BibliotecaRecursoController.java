@@ -1,7 +1,7 @@
 package com.recolectaedu.controller;
 
-import com.recolectaedu.dto.request.BibliotecaItemCreateRequestDTO;
-import com.recolectaedu.dto.response.BibliotecaItemResponseDTO;
+import com.recolectaedu.dto.request.BibliotecaRecursoCreateRequestDTO;
+import com.recolectaedu.dto.response.BibliotecaRecursoResponseDTO;
 import com.recolectaedu.service.BibliotecaRecursoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -18,17 +18,18 @@ public class BibliotecaRecursoController {
     private final BibliotecaRecursoService bibliotecaRecursoService;
 
     @GetMapping
-    public ResponseEntity<List<BibliotecaItemResponseDTO>> listarRecursos(
+    public ResponseEntity<List<BibliotecaRecursoResponseDTO>> listarRecursos(
             @PathVariable Integer id_biblioteca
     ) {
         return ResponseEntity.ok(bibliotecaRecursoService.listarRecursos(id_biblioteca));
     }
 
     @PostMapping
-    public ResponseEntity<BibliotecaItemResponseDTO> guardarRecursoEnBiblioteca(
-            @Valid @RequestBody BibliotecaItemCreateRequestDTO request
+    public ResponseEntity<BibliotecaRecursoResponseDTO> guardarRecursoEnBiblioteca(
+            @PathVariable Integer id_biblioteca,
+            @Valid @RequestBody BibliotecaRecursoCreateRequestDTO request
     ) {
-        return ResponseEntity.ok(bibliotecaRecursoService.guardarRecursoEnBiblioteca(request));
+        return ResponseEntity.ok(bibliotecaRecursoService.guardarRecursoEnBiblioteca(id_biblioteca, request));
     }
 
     @DeleteMapping("/{id_recurso}")
