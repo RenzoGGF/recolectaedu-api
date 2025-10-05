@@ -1,4 +1,5 @@
 package com.recolectaedu.service;
+import com.recolectaedu.dto.response.BibliotecaResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Biblioteca;
@@ -17,7 +18,7 @@ public class BibliotecaService {
     private final BibliotecaRepository bibliotecaRepository;
 
     @Transactional
-    public Biblioteca crearBiblioteca(Integer id_usuario) {
+    public BibliotecaResponseDTO crearBiblioteca(Integer id_usuario) {
         Usuario usuario = usuarioRepository.findById(id_usuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
@@ -31,15 +32,27 @@ public class BibliotecaService {
                 .nombre("Mi biblioteca")
                 .build();
 
-        return bibliotecaRepository.save(biblioteca);
+        Biblioteca guardado = bibliotecaRepository.save(biblioteca);
+
+        return BibliotecaResponseDTO.builder()
+                .id_biblioteca(guardado.getId_biblioteca())
+                .nombre(guardado.getNombre())
+                .id_usuario(guardado.getUsuario().getId_usuario())
+                .build();
     }
 
     @Transactional
-    public Biblioteca obtenerBibliotecaPorUsuarioId(Integer id_usuario) {
+    public BibliotecaResponseDTO obtenerBibliotecaPorUsuarioId(Integer id_usuario) {
         Usuario usuario = usuarioRepository.findById(id_usuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        return bibliotecaRepository.findByUsuario(usuario)
+        Biblioteca biblioteca = bibliotecaRepository.findByUsuario(usuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        return BibliotecaResponseDTO.builder()
+                .id_biblioteca(biblioteca.getId_biblioteca())
+                .nombre(biblioteca.getNombre())
+                .id_usuario(biblioteca.getUsuario().getId_usuario())
+                .build();
     }
 }

@@ -1,10 +1,10 @@
 package com.recolectaedu.dto.response;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class BibliotecaResponseDTO {
-    private Integer id_biblioteca;
-    private String nombre;
-    private Integer id_usuario;
-}
+@Builder
+public record BibliotecaResponseDTO(
+        Integer id_biblioteca,
+        String nombre,
+        Integer id_usuario
+) {}
