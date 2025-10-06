@@ -2,6 +2,8 @@ package com.recolectaedu.controller;
 
 import com.recolectaedu.dto.request.PerfilRequestDTO;
 import com.recolectaedu.dto.request.UserRequestDTO;
+import com.recolectaedu.dto.response.UsuarioStatsResponseDTO;
+import com.recolectaedu.model.Usuario;
 import com.recolectaedu.dto.response.UserResponseDTO;
 import com.recolectaedu.service.UsuarioService;
 import jakarta.validation.Valid;
@@ -47,5 +49,12 @@ public class UsuarioController {
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         usuarioService.eliminarUsuario(id);
         return ResponseEntity.noContent().build(); // 204
+    }
+
+    @GetMapping("/{id_usuario}/estadisticas")
+    public ResponseEntity<UsuarioStatsResponseDTO> obtenerEstadisticas(
+            @PathVariable Integer id_usuario
+    ) {
+        return ResponseEntity.ok(usuarioService.obtenerEstadisticas(id_usuario));
     }
 }

@@ -4,6 +4,7 @@ import com.recolectaedu.model.Biblioteca;
 import com.recolectaedu.model.BibliotecaRecurso;
 import com.recolectaedu.model.Recurso;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -14,4 +15,8 @@ public interface BibliotecaRecursoRepository extends JpaRepository<BibliotecaRec
     boolean existsByBibliotecaAndRecurso(Biblioteca biblioteca, Recurso recurso);
     List<BibliotecaRecurso> findByBiblioteca(Biblioteca biblioteca);
     Optional<BibliotecaRecurso> findByBibliotecaAndRecurso(Biblioteca biblioteca, Recurso recurso);
+
+    // US17 Items en la biblioteca del usuario (join: biblioteca -> usuario)
+    @Query("select count(br) from BibliotecaRecurso br where br.biblioteca.usuario.id = :userId")
+    long countItemsByUsuarioId(Integer userId);
 }

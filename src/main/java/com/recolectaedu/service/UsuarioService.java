@@ -4,12 +4,13 @@ import com.recolectaedu.dto.request.PerfilRequestDTO;
 import com.recolectaedu.dto.request.UserRequestDTO;
 import com.recolectaedu.dto.response.PerfilResponseDTO;
 import com.recolectaedu.dto.response.UserResponseDTO;
+import com.recolectaedu.dto.response.UsuarioStatsResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.model.enums.Rol;
-import com.recolectaedu.repository.UsuarioRepository;
+import com.recolectaedu.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,11 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
+    private final RecursoRepository recursoRepository;
+    private final ComentarioRepository comentarioRepository;
+    private final ResenaRepository resenaRepository;
+    private final BibliotecaRecursoRepository bibliotecaRecursoRepository;
+  
     // POST
     @Transactional
     public UserResponseDTO registrarUsuario(UserRequestDTO r) {
@@ -98,6 +104,30 @@ public class UsuarioService {
         } catch (IllegalArgumentException ex) {
             throw new BusinessRuleException("Rol inválido. Permitidos: FREE, PREMIUM, ADMIN.");
         }
+      
+     //GET stats 
+    @Transactional(readOnly = true)
+    public UsuarioStatsResponseDTO obtenerEstadisticas(Integer idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new IllegalArgumentException("Usuario no encontrado: " + idUsuario));
+
+        long totalRecursos = recursoRepository.countByAutorId(idUsuario);
+        long totalComentarios = comentarioRepository.countByAutorId(idUsuario);
+
+        long totalResenas = resenaRepository.countResenasRecibidasPorAutor(idUsuario);
+        long totalResenasPos = resenaRepository.countResenasPositivasPorAutor(idUsuario);
+        long totalResenasNeg = resenaRepository.countResenasNegativasPorAutor(idUsuario);
+
+        long totalItemsBiblioteca = bibliotecaRecursoRepository.countItemsByUsuarioId(idUsuario);
+
+        return UsuarioStatsResponseDTO.builder()
+                .totalRecursosPublicados(totalRecursos)
+                .totalComentariosRealizados(totalComentarios)
+                .totalResenasRecibidas(totalResenas)
+                .totalResenasPositivas(totalResenasPos)
+                .totalResenasNegativas(totalResenasNeg)
+                .totalItemsBiblioteca(totalItemsBiblioteca)
+                .build();
     }
 
     private UserResponseDTO toDTO(Usuario u) {

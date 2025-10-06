@@ -1,6 +1,6 @@
 package com.recolectaedu.controller;
 
-import com.recolectaedu.dto.request.BibliotecaRecursoCreateRequestDTO;
+import com.recolectaedu.dto.request.BibliotecaRecursoRequestDTO;
 import com.recolectaedu.dto.response.BibliotecaRecursoResponseDTO;
 import com.recolectaedu.service.BibliotecaRecursoService;
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ public class BibliotecaRecursoController {
     @PostMapping
     public ResponseEntity<BibliotecaRecursoResponseDTO> guardarRecursoEnBiblioteca(
             @PathVariable Integer id_biblioteca,
-            @Valid @RequestBody BibliotecaRecursoCreateRequestDTO request
+            @Valid @RequestBody BibliotecaRecursoRequestDTO request
     ) {
         return ResponseEntity.ok(bibliotecaRecursoService.guardarRecursoEnBiblioteca(id_biblioteca, request));
     }
