@@ -1,12 +1,16 @@
 package com.recolectaedu.dto.response;
 
-import lombok.Data;
+import lombok.Builder;
 
-@Data
-public class ResenaResponseDTO {
-    private Integer id_reseña;
-    private String titulo;
-    private Boolean es_positivo;
-    private Integer id_usuario;
-    private Integer id_recurso;
-}
+import java.time.LocalDateTime;
+
+@Builder
+public record ResenaResponseDTO(
+        Integer id_resena,
+        String contenido,
+        Boolean es_positivo,
+        String nombre_autor,
+        String titulo_recurso,
+        LocalDateTime creado_el,
+        LocalDateTime actualizado_el
+) {}
