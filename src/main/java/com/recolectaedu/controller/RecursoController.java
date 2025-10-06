@@ -1,6 +1,7 @@
 package com.recolectaedu.controller;
 
 import com.recolectaedu.dto.response.RecursoResponseDTO;
+import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.service.RecursoService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -36,4 +37,10 @@ public class RecursoController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/curso/{id_curso}/mas-valorados")
+    public ResponseEntity<List<RecursoValoradoResponseDTO>> obtenerMasValoradosPorCurso(
+            @PathVariable("id_curso") Integer id_curso
+    ) {
+        return ResponseEntity.ok(recursoService.obtenerRecursosMasValoradosPorCurso(id_curso));
+    }
 }

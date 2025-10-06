@@ -1,5 +1,6 @@
 package com.recolectaedu.repository;
 
+import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
 import org.springframework.data.domain.Sort;
@@ -42,4 +43,28 @@ public interface RecursoRepository extends JpaRepository<Recurso, Integer> {
             @Param("calificacionMinima") Integer calificacionMinima,
             Sort sort
     );
+
+    // Ordena los recursos según su valoración neta de un curso
+    @Query("""
+        select new com.recolectaedu.dto.response.RecursoValoradoResponseDTO(
+            r.id_recurso,
+            r.titulo,
+            r.descripcion,
+            r.ano,
+            cast(r.periodo as integer),
+            cast(coalesce(sum(case when rs.es_positivo = true then 1 else 0 end), 0) as integer),
+            cast(coalesce(sum(case when rs.es_positivo = false then 1 else 0 end), 0) as integer),
+            cast((coalesce(sum(case when rs.es_positivo = true then 1 else 0 end), 0) -
+                  coalesce(sum(case when rs.es_positivo = false then 1 else 0 end), 0)) as integer),
+            r.actualizado_el
+        )
+        from Recurso r
+        left join Resena rs on rs.recurso = r
+        where r.curso.id_curso = :idCurso
+        group by r.id_recurso, r.titulo, r.descripcion, r.ano, r.periodo, r.actualizado_el
+        order by (coalesce(sum(case when rs.es_positivo = true then 1 else 0 end), 0) -
+                  coalesce(sum(case when rs.es_positivo = false then 1 else 0 end), 0)) desc,
+                 r.actualizado_el desc
+        """)
+    List<RecursoValoradoResponseDTO> findMasValoradosPorCursoConMetricas(Integer idCurso);
 }
