@@ -1,6 +1,6 @@
 package com.recolectaedu.service;
 
-import com.recolectaedu.dto.request.BibliotecaRecursoCreateRequestDTO;
+import com.recolectaedu.dto.request.BibliotecaRecursoRequestDTO;
 import com.recolectaedu.dto.response.BibliotecaRecursoResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
@@ -33,7 +33,7 @@ public class BibliotecaRecursoService {
     }
 
     @Transactional
-    public BibliotecaRecursoResponseDTO guardarRecursoEnBiblioteca(Integer id_biblioteca, BibliotecaRecursoCreateRequestDTO request) {
+    public BibliotecaRecursoResponseDTO guardarRecursoEnBiblioteca(Integer id_biblioteca, BibliotecaRecursoRequestDTO request) {
         Recurso recurso = recursoRepository.findById(request.id_recurso())
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 

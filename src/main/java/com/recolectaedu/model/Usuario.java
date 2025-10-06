@@ -27,7 +27,6 @@ public class Usuario {
     @Column(nullable = false)
     private Rol rol;
 
-
     // Relación 1:1 con Perfil
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, optional = true, orphanRemoval = true)
     private Perfil perfil;

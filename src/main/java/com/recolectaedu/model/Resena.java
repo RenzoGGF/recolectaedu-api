@@ -20,9 +20,6 @@ public class Resena {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_resena;
 
-    @Column(nullable = false, length = 255)
-    private String titulo;
-
     private String contenido;
 
     @Column(nullable = false)
