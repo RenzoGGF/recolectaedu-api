@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 public class RecursoService {
 
     private final RecursoRepository recursoRepository;
-    private final UsuarioRepository usuarioRepository;
     private final CursoRepository cursoRepository;
 
     // US-12
