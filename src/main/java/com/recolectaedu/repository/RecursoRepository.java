@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface RecursoRepository extends JpaRepository<Recurso, Integer> {
+public interface    RecursoRepository extends JpaRepository<Recurso, Integer> {
 
     // US-12: Recursos recientes por curso
     @Query("SELECT r FROM Recurso r WHERE r.curso.id_curso = :cursoId ORDER BY r.creado_el DESC")
@@ -42,4 +42,9 @@ public interface RecursoRepository extends JpaRepository<Recurso, Integer> {
             @Param("calificacionMinima") Integer calificacionMinima,
             Sort sort
     );
+
+    // US-17 - Recursos publicados por el usuario (autor)
+    @Query("select count(r) from Recurso r where r.usuario.id = :userId")
+    long countByAutorId(Integer userId);
 }
+
