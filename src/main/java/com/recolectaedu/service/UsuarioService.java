@@ -1,8 +1,8 @@
 package com.recolectaedu.service;
 
 import com.recolectaedu.dto.request.PerfilRequestDTO;
-import com.recolectaedu.dto.response.PerfilResponseDTO;
 import com.recolectaedu.dto.request.UserRequestDTO;
+import com.recolectaedu.dto.response.PerfilResponseDTO;
 import com.recolectaedu.dto.response.UserResponseDTO;
 import com.recolectaedu.dto.response.UsuarioStatsResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
@@ -22,28 +22,25 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
+
     private final RecursoRepository recursoRepository;
     private final ComentarioRepository comentarioRepository;
     private final ResenaRepository resenaRepository;
     private final BibliotecaRecursoRepository bibliotecaRecursoRepository;
-
+  
+    // POST
     @Transactional
     public UserResponseDTO registrarUsuario(UserRequestDTO r) {
         if (usuarioRepository.existsByEmail(r.getEmail())) {
             throw new BusinessRuleException("El email ya está registrado");
         }
 
-        Rol rol = (r.getRol() == null || r.getRol().isBlank())
-                ? Rol.FREE
-                : Rol.valueOf(r.getRol().toUpperCase());
-
         Usuario u = Usuario.builder()
                 .email(r.getEmail())
                 .password_hash(passwordEncoder.encode(r.getPassword()))
-                .rol(rol)
+                .rol(resolveRol(r.getRol()))
                 .build();
 
-        // perfil opcional
         if (r.getPerfil() != null) {
             var pr = r.getPerfil();
             Perfil p = Perfil.builder()
@@ -53,65 +50,62 @@ public class UsuarioService {
                     .carrera(pr.getCarrera())
                     .ciclo(pr.getCiclo())
                     .build();
-            u.attachPerfil(p); // mantiene ambos lados (MapsId)
+            u.attachPerfil(p); // establece ambos lados (MapsId)
         }
 
-        Usuario saved = usuarioRepository.save(u);
-
-        // devolver DTO (sin password)
-        return new UserResponseDTO(
-                saved.getId_usuario(),
-                saved.getEmail(),
-                saved.getRol().name(),
-                saved.getPerfil() == null ? null :
-                        new PerfilResponseDTO(
-                                saved.getPerfil().getId_usuario(),
-                                saved.getPerfil().getNombre(),
-                                saved.getPerfil().getApellidos(),
-                                saved.getPerfil().getUniversidad(),
-                                saved.getPerfil().getCarrera(),
-                                saved.getPerfil().getCiclo()
-                        )
-        );
+        var saved = usuarioRepository.save(u);
+        return toDTO(saved);
     }
 
-
+    // GET
     @Transactional(readOnly = true)
-    public Usuario obtenerUsuarioPorId(Integer id) {
-        return usuarioRepository.findById(id)
+    public UserResponseDTO obtenerUsuarioPorIdDTO(Integer id) {
+        var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        return toDTO(user);
     }
 
-
-    // Actualiza/crea el Perfil (1:1) del usuario.
+    // PUT
     @Transactional
-    public Usuario actualizarPerfil(Integer id, PerfilRequestDTO perfilRequestDTO) {
-        Usuario usuario = usuarioRepository.findById(id)
+    public UserResponseDTO actualizarPerfilDTO(Integer id, PerfilRequestDTO dto) {
+        var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        Perfil perfil = usuario.getPerfil();
+        var perfil = user.getPerfil();
         if (perfil == null) {
             perfil = Perfil.builder().build();
-            usuario.attachPerfil(perfil); // vincula ambos lados (MapsId)
+            user.attachPerfil(perfil); // vincula ambos lados y comparte PK (MapsId)
         }
 
-        perfil.setNombre(perfilRequestDTO.getNombre());
-        perfil.setApellidos(perfilRequestDTO.getApellidos());
-        perfil.setUniversidad(perfilRequestDTO.getUniversidad());
-        perfil.setCarrera(perfilRequestDTO.getCarrera());
-        perfil.setCiclo(perfilRequestDTO.getCiclo());
+        perfil.setNombre(dto.getNombre());
+        perfil.setApellidos(dto.getApellidos());
+        perfil.setUniversidad(dto.getUniversidad());
+        perfil.setCarrera(dto.getCarrera());
+        perfil.setCiclo(dto.getCiclo());
 
-        return usuarioRepository.save(usuario);
+        var saved = usuarioRepository.save(user);
+        return toDTO(saved);
     }
 
+    // DELETE
     @Transactional
     public void eliminarUsuario(Integer id) {
-        Usuario usuario = usuarioRepository.findById(id)
+        var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-
-        usuarioRepository.delete(usuario);
+        usuarioRepository.delete(user); // orphanRemoval=true elimina también el Perfil
     }
 
+    // Helpers
+
+    private Rol resolveRol(String raw) {
+        if (raw == null || raw.isBlank()) return Rol.FREE; // default
+        try {
+            return Rol.valueOf(raw.trim().toUpperCase()); // FREE, PREMIUM, ADMIN
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessRuleException("Rol inválido. Permitidos: FREE, PREMIUM, ADMIN.");
+        }
+      
+     //GET stats 
     @Transactional(readOnly = true)
     public UsuarioStatsResponseDTO obtenerEstadisticas(Integer idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
@@ -136,4 +130,20 @@ public class UsuarioService {
                 .build();
     }
 
+    private UserResponseDTO toDTO(Usuario u) {
+        return new UserResponseDTO(
+                u.getId_usuario(),
+                u.getEmail(),
+                u.getRol().name(), // "FREE"/"PREMIUM"/"ADMIN"
+                u.getPerfil() == null ? null :
+                        new PerfilResponseDTO(
+                                u.getPerfil().getId_usuario(),
+                                u.getPerfil().getNombre(),
+                                u.getPerfil().getApellidos(),
+                                u.getPerfil().getUniversidad(),
+                                u.getPerfil().getCarrera(),
+                                u.getPerfil().getCiclo()
+                        )
+        );
+    }
 }
