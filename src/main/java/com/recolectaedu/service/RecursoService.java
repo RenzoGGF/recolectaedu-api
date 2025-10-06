@@ -1,7 +1,9 @@
 package com.recolectaedu.service;
 
 import com.recolectaedu.dto.response.RecursoResponseDTO;
+import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.exception.ResourceNotFoundException;
+import com.recolectaedu.model.Curso;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
 import com.recolectaedu.repository.CursoRepository;
@@ -10,6 +12,7 @@ import com.recolectaedu.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,6 +64,14 @@ public class RecursoService {
         );
 
         return getRecursoResponseDTOS(recursos);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecursoValoradoResponseDTO> obtenerRecursosMasValoradosPorCurso(Integer id_curso) {
+        Curso curso = cursoRepository.findById(id_curso)
+                .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado"));
+
+        return recursoRepository.findMasValoradosPorCursoConMetricas(id_curso);
     }
 
     private List<RecursoResponseDTO> getRecursoResponseDTOS(List<Recurso> recursos) {
