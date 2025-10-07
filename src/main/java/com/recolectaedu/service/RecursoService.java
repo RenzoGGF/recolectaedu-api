@@ -1,5 +1,6 @@
 package com.recolectaedu.service;
 
+import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
@@ -22,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -35,6 +37,7 @@ public class RecursoService {
     private final RecursoRepository recursoRepository;
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final IAlmacenamientoService almacenamientoService;
 
     private RecursoResponseDTO toDto(Recurso r) {
         RecursoResponseDTO dto = new RecursoResponseDTO();
@@ -61,6 +64,13 @@ public class RecursoService {
         if (ordinal < 0 || ordinal >= valores.length)
             throw new BusinessRuleException("Periodo inválido (valor fuera de rango)");
         return valores[ordinal];
+    }
+
+    private Curso validarYObtenerCurso(String universidad, String carrera, String nombreCurso) {
+        return cursoRepository.findByUniversidadAndCarreraAndNombre(universidad, carrera, nombreCurso)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("La clasificación académica es inválida. No se encontró el curso '%s' para la carrera '%s' en la universidad '%s'.",
+                                nombreCurso, carrera, universidad)));
     }
 
     // US-12
@@ -119,14 +129,40 @@ public class RecursoService {
     @Transactional
     public RecursoResponseDTO crear(RecursoCreateRequestDTO req) {
         Usuario usuario = usuarioRepository.findById(req.id_usuario())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
-        Curso curso = cursoRepository.findById(req.id_curso())
-                .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + req.id_usuario()));
+
+        Curso curso = validarYObtenerCurso(req.universidad(), req.carrera(), req.nombreCurso());
 
         Recurso recurso = Recurso.builder()
                 .titulo(req.titulo())
                 .descripcion(req.descripcion())
                 .contenido(req.contenido())
+                .formato(req.formato())
+                .tipo(req.tipo())
+                .ano(req.ano())
+                .periodo(mapPeriodoOrdinal(req.periodo()))
+                .usuario(usuario)
+                .curso(curso)
+                .creado_el(LocalDateTime.now())
+                .actualizado_el(LocalDateTime.now())
+                .build();
+
+        return toDto(recursoRepository.save(recurso));
+    }
+
+    @Transactional
+    public RecursoResponseDTO crearDesdeArchivo(MultipartFile archivo, RecursoArchivoCreateRequestDTO req) {
+        String nombreArchivo = almacenamientoService.almacenar(archivo);
+
+        Usuario usuario = usuarioRepository.findById(req.id_usuario())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + req.id_usuario()));
+
+        Curso curso = validarYObtenerCurso(req.universidad(), req.carrera(), req.nombreCurso());
+
+        Recurso recurso = Recurso.builder()
+                .titulo(req.titulo())
+                .descripcion(req.descripcion())
+                .contenido(nombreArchivo) // Guardamos el path/nombre del archivo
                 .formato(req.formato())
                 .tipo(req.tipo())
                 .ano(req.ano())
@@ -188,6 +224,10 @@ public class RecursoService {
     public void eliminar(Integer id_recurso) {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+        // Opcional: eliminar el archivo físico si el recurso es de tipo archivo
+        if (recurso.getFormato() == com.recolectaedu.model.enums.FormatoRecurso.ARCHIVO) {
+            almacenamientoService.eliminar(recurso.getContenido());
+        }
         recursoRepository.delete(recurso);
     }
 
