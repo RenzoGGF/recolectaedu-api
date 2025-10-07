@@ -25,8 +25,7 @@ public class Foro {
     @Column(nullable = false,  length = 255)
     private String titulo;
 
-    @Lob
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String contenido;
 
     @CreationTimestamp

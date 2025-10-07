@@ -20,7 +20,7 @@ public interface    RecursoRepository extends JpaRepository<Recurso, Integer> {
 
 
     // US-9 y 10: Búsqueda Avanzada
-    @Query("SELECT r FROM Recurso r " +
+    @Query ("SELECT r FROM Recurso r " +
             "LEFT JOIN r.curso c " +
             "LEFT JOIN r.usuario u " +
             "LEFT JOIN u.perfil p " +
