@@ -38,4 +38,23 @@ public class Usuario {
             perfil.setUsuario(this);
         }
     }
+
+    // Relación 1:N con Membresia y hook
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.List<Membresia> membresias = new java.util.ArrayList<>();
+
+    public void addMembresia(Membresia m) {
+        if (m != null) {
+            m.setUsuario(this);
+            this.membresias.add(m);
+        }
+    }
+
+    public void removeMembresia(Membresia m) {
+        if (m != null) {
+            m.setUsuario(null);
+            this.membresias.remove(m);
+        }
+    }
+
 }
