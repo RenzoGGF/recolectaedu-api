@@ -1,8 +1,11 @@
 package com.recolectaedu.repository;
 
+import com.recolectaedu.dto.response.AporteListadoResponseDTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -45,7 +48,7 @@ public interface    RecursoRepository extends JpaRepository<Recurso, Integer> {
     );
 
     // US-17 - Recursos publicados por el usuario (autor)
-    @Query("select count(r) from Recurso r where r.usuario.id = :userId")
+    @Query("select count(r) from Recurso r where r.usuario.id_usuario = :userId")
     long countByAutorId(Integer userId);
   
     // Ordena los recursos según su valoración neta de un curso
@@ -71,4 +74,28 @@ public interface    RecursoRepository extends JpaRepository<Recurso, Integer> {
                  r.actualizado_el desc
         """)
     List<RecursoValoradoResponseDTO> findMasValoradosPorCursoConMetricas(Integer idCurso);
+
+    // US-08: Historial de aportes del usuario autenticado
+    @Query("""
+        SELECT new com.recolectaedu.dto.response.AporteListadoResponseDTO(
+            r.id_recurso,
+            r.titulo,
+            r.tipo,
+            r.curso.id_curso,
+            r.curso.nombre,
+            r.curso.universidad,
+            r.creado_el,
+            r.actualizado_el
+        )
+        FROM Recurso r
+        WHERE r.usuario.id_usuario = :usuarioId
+        AND (:cursoId IS NULL OR r.curso.id_curso = :cursoId)
+        AND (:tipo IS NULL OR r.tipo = :tipo)
+        """)
+    Page<AporteListadoResponseDTO> findAportesByUsuario(
+        @Param("usuarioId") Integer usuarioId,
+        @Param("cursoId") Integer cursoId,
+        @Param("tipo") Tipo_recurso tipo,
+        Pageable pageable
+    );
 }
