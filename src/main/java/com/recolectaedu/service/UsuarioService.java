@@ -104,6 +104,7 @@ public class UsuarioService {
         } catch (IllegalArgumentException ex) {
             throw new BusinessRuleException("Rol inválido. Permitidos: FREE, PREMIUM, ADMIN.");
         }
+    }
       
      //GET stats 
     @Transactional(readOnly = true)

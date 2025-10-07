@@ -1,5 +1,8 @@
 package com.recolectaedu.model.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum Periodo {
     verano(0),
     primer(1),
@@ -11,7 +14,4 @@ public enum Periodo {
         this.valor = valor;
     }
 
-    public int getValor() {
-        return valor;
-    }
 }
