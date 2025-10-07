@@ -1,5 +1,6 @@
 package com.recolectaedu.controller;
 
+import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
@@ -8,8 +9,10 @@ import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.service.RecursoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
 import java.util.List;
@@ -49,11 +52,20 @@ public class RecursoController {
         return ResponseEntity.ok(recursoService.obtenerRecursosMasValoradosPorCurso(id_curso));
     }
 
-    @PostMapping
-    public ResponseEntity<RecursoResponseDTO> crear(
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<RecursoResponseDTO> crearRecursoJson(
             @Valid @RequestBody RecursoCreateRequestDTO request
     ) {
         RecursoResponseDTO creado = recursoService.crear(request);
+        return ResponseEntity.created(URI.create("/recursos/" + creado.getId_recurso())).body(creado);
+    }
+
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+    public ResponseEntity<RecursoResponseDTO> crearRecursoArchivo(
+            @RequestPart("archivo") MultipartFile archivo,
+            @Valid @RequestPart("metadata") RecursoArchivoCreateRequestDTO metadata
+    ) {
+        RecursoResponseDTO creado = recursoService.crearDesdeArchivo(archivo, metadata);
         return ResponseEntity.created(URI.create("/recursos/" + creado.getId_recurso())).body(creado);
     }
 

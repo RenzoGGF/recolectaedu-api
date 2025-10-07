@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface CursoRepository extends JpaRepository<Curso, Integer> {
 
@@ -30,5 +31,7 @@ public interface CursoRepository extends JpaRepository<Curso, Integer> {
             "GROUP BY c.id, c.nombre, c.universidad, c.carrera " +
             "ORDER BY COUNT(r) DESC")
     Page<CursoRankingAportesDTO> rankingPorAportes(@Param("universidad") String universidad, @Param("carrera") String carrera, Pageable pageable);
+
+    Optional<Curso> findByUniversidadAndCarreraAndNombre(String universidad, String carrera, String nombre);
 
 }

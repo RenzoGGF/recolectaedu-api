@@ -6,7 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Builder;
 
 @Builder
-public record RecursoCreateRequestDTO(
+public record RecursoArchivoCreateRequestDTO(
         @NotNull
         Integer id_usuario,
         @NotBlank
@@ -20,8 +20,7 @@ public record RecursoCreateRequestDTO(
         String titulo,
         @NotBlank
         String descripcion,
-        @NotBlank
-        String contenido,
+        // Contenido se omite, vendrá del MultipartFile
         @NotNull
         FormatoRecurso formato,
         @NotNull
