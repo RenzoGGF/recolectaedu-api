@@ -1,16 +1,18 @@
 package com.recolectaedu.model;
 
-
+import com.recolectaedu.model.enums.MembresiaStatus;
 import com.recolectaedu.model.enums.Plan;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.Instant;
 
-@Data
 @Entity
-@Table(name = "Membresía")
+@Table(name = "membresia",
+        indexes = {
+                @Index(name = "idx_membresia_usuario", columnList = "id_usuario"),
+                @Index(name = "idx_membresia_status", columnList = "status")
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,22 +22,27 @@ public class Membresia {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id_membresia;
+    private Integer id;
+
+    // Usuario 1:N Membresia
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_usuario", nullable = false, foreignKey = @ForeignKey(name = "fk_membresia_usuario"))
+    private Usuario usuario;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Plan tipo;
+    @Column(nullable = false, length = 20)
+    private MembresiaStatus status; // PENDING/ACTIVE/CANCELED/EXPIRED
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Plan plan; // MONTHLY/ANNUAL
 
     @Column(nullable = false)
-    private Boolean es_activo;
+    private Instant startsAt;
 
     @Column(nullable = false)
-    private LocalDateTime empieza_el;
+    private Instant endsAt;
 
     @Column(nullable = false)
-    private LocalDateTime termina_el;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_usuario", nullable = false)
-    private Usuario usuario;
+    private boolean autoRenew;
 }
