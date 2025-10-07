@@ -3,6 +3,7 @@ package com.recolectaedu.service;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
+import com.recolectaedu.dto.response.AporteListadoResponseDTO;
 import com.recolectaedu.dto.response.RecursoResponseDTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
@@ -16,11 +17,14 @@ import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -185,6 +189,35 @@ public class RecursoService {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
         recursoRepository.delete(recurso);
+    }
+
+    // US-08: Historial de aportes del usuario autenticado
+    @Transactional(readOnly = true)
+    public Page<AporteListadoResponseDTO> listarMisAportes(
+            Integer usuarioId,
+            Integer cursoId,
+            String tipo,
+            Pageable pageable
+    ) {
+        if (!usuarioRepository.existsById(usuarioId)) {
+            throw new ResourceNotFoundException("Usuario no encontrado con ID: " + usuarioId);
+        }
+
+        Tipo_recurso tipoEnum = null;
+        if (tipo != null && !tipo.trim().isEmpty()) {
+            final String tipoBusqueda = tipo;
+            tipoEnum = Arrays.stream(Tipo_recurso.values())
+                    .filter(tr -> tr.name().equalsIgnoreCase(tipoBusqueda))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("El tipo de recurso '" + tipoBusqueda + "' no es válido."));
+        }
+
+        return recursoRepository.findAportesByUsuario(
+                usuarioId,
+                cursoId,
+                tipoEnum,
+                pageable
+        );
     }
 
     @Transactional(readOnly = true)
