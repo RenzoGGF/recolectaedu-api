@@ -7,8 +7,12 @@ import lombok.Builder;
 
 @Builder
 public record RecursoUpdateRequestDTO(
-        @NotNull
-        Integer id_curso,
+        @NotBlank
+        String universidad,
+        @NotBlank
+        String carrera,
+        @NotBlank
+        String nombreCurso,
         @NotBlank
         @Size(max = 255)
         String titulo,
