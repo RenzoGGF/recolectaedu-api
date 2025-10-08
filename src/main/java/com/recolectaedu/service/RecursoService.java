@@ -62,7 +62,7 @@ public class RecursoService {
         if (ordinal == null) return null;
         var valores = Periodo.values();
         if (ordinal < 0 || ordinal >= valores.length)
-            throw new BusinessRuleException("Periodo inválido (valor fuera de rango)");
+            throw new BusinessRuleException("Periodo inválido. Valores permitidos: 0 (verano), 1 (primer), 2 (segundo).");
         return valores[ordinal];
     }
 
@@ -181,8 +181,7 @@ public class RecursoService {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
-        Curso curso = cursoRepository.findById(request.id_curso())
-                .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado"));
+        Curso curso = validarYObtenerCurso(request.universidad(), request.carrera(), request.nombreCurso());
 
         recurso.setTitulo(request.titulo());
         recurso.setDescripcion(request.descripcion());
@@ -202,9 +201,9 @@ public class RecursoService {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
-        if (request.id_curso() != null) {
-            Curso curso = cursoRepository.findById(request.id_curso())
-                    .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado"));
+        // Si se quiere actualizar la clasificación, se deben proporcionar los tres campos.
+        if (request.universidad() != null && request.carrera() != null && request.nombreCurso() != null) {
+            Curso curso = validarYObtenerCurso(request.universidad(), request.carrera(), request.nombreCurso());
             recurso.setCurso(curso);
         }
 

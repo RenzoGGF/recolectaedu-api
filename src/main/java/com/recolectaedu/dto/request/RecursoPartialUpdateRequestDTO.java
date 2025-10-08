@@ -9,7 +9,11 @@ import lombok.Builder;
 @Builder
 public record RecursoPartialUpdateRequestDTO(
         @Nullable
-        Integer id_curso,
+        String universidad,
+        @Nullable
+        String carrera,
+        @Nullable
+        String nombreCurso,
         @Nullable
         @Size(max = 255)
         String titulo,
