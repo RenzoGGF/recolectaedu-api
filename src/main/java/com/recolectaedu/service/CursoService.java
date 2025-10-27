@@ -1,6 +1,7 @@
 package com.recolectaedu.service;
 
 import com.recolectaedu.dto.response.CursoRankingAportesDTO;
+import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.dto.response.CursoResponseDTO;
 import com.recolectaedu.repository.CursoRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class CursoService {
     private final CursoRepository cursoRepository;
 
 
-    public List<CursoResponseDTO> findCursosPopulares() {
+    public List<CursoResponse2DTO> findCursosPopulares() {
         return cursoRepository.findCursosPopulares();
     }
 

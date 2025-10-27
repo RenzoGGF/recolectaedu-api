@@ -1,6 +1,7 @@
 package com.recolectaedu.controller;
 
 import com.recolectaedu.dto.response.CursoRankingAportesDTO;
+import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.dto.response.CursoResponseDTO;
 import com.recolectaedu.service.CursoService;
 import lombok.RequiredArgsConstructor;
@@ -24,8 +25,8 @@ public class CursoController {
 
     //US-11 - Listar cursos más populares
     @GetMapping("/populares")
-    public ResponseEntity<List<CursoResponseDTO>> findCursosPopulares() {
-        List<CursoResponseDTO> response = cursoService.findCursosPopulares();
+    public ResponseEntity<List<CursoResponse2DTO>> findCursosPopulares() {
+        List<CursoResponse2DTO> response = cursoService.findCursosPopulares();
         return ResponseEntity.ok(response);
     }
 

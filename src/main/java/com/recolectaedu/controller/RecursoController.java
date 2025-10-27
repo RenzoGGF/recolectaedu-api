@@ -4,6 +4,7 @@ import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
+import com.recolectaedu.dto.response.RecursoResponse2DTO;
 import com.recolectaedu.dto.response.RecursoResponseDTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.service.RecursoService;
@@ -26,13 +27,13 @@ public class RecursoController {
 
     // Endpoint para US-12
     @GetMapping("/curso/{cursoId}/recientes")
-    public ResponseEntity<List<RecursoResponseDTO>> findRecientesByCurso(@PathVariable Integer cursoId) {
-        List<RecursoResponseDTO> response = recursoService.findRecientesByCurso(cursoId);
+    public ResponseEntity<List<RecursoResponse2DTO>> findRecientesByCurso(@PathVariable Integer cursoId) {
+        List<RecursoResponse2DTO> response = recursoService.findRecientesByCurso(cursoId);
         return ResponseEntity.ok(response);
     }
     // Endpoint para US-9 y US-10
     @GetMapping
-    public ResponseEntity<List<RecursoResponseDTO>> searchRecursos(
+    public ResponseEntity<List<RecursoResponse2DTO>> searchRecursos(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer cursoId,
             @RequestParam(required = false) String tipo,
@@ -41,7 +42,7 @@ public class RecursoController {
             @RequestParam(required = false) Integer calificacionMinima,
             @RequestParam(required = false) String ordenarPor
     ) {
-        List<RecursoResponseDTO> response = recursoService.searchRecursos(keyword, cursoId, tipo, autor, universidad, calificacionMinima, ordenarPor);
+        List<RecursoResponse2DTO> response = recursoService.searchRecursos(keyword, cursoId, tipo, autor, universidad, calificacionMinima, ordenarPor);
         return ResponseEntity.ok(response);
     }
 
