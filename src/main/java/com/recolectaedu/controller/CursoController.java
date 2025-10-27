@@ -25,8 +25,10 @@ public class CursoController {
 
     //US-11 - Listar cursos más populares
     @GetMapping("/populares")
-    public ResponseEntity<List<CursoResponse2DTO>> findCursosPopulares() {
-        List<CursoResponse2DTO> response = cursoService.findCursosPopulares();
+    public ResponseEntity<List<CursoResponse2DTO>> findCursosPopulares(
+            @RequestParam String institucion
+    ) {
+        List<CursoResponse2DTO> response = cursoService.findCursosPopulares(institucion);
         return ResponseEntity.ok(response);
     }
 
