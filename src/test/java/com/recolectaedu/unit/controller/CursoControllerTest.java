@@ -1,5 +1,6 @@
-package com.recolectaedu.controller;
+package com.recolectaedu.unit.controller;
 
+import com.recolectaedu.controller.CursoController;
 import com.recolectaedu.service.CursoService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -20,9 +20,10 @@ public interface CursoRepository extends JpaRepository<Curso, Integer> {
     @Query("SELECT new com.recolectaedu.dto.response.CursoResponse2DTO(" +
             "c.id_curso, c.universidad, c.nombre, c.carrera, COUNT(r)) " +
             "FROM Recurso r JOIN r.curso c " +
+            "WHERE c.universidad = :institucion " +
             "GROUP BY c.id_curso, c.universidad, c.nombre, c.carrera " +
             "ORDER BY COUNT(r) DESC")
-    List<CursoResponse2DTO> findCursosPopulares();
+    List<CursoResponse2DTO> findCursosPopulares(@Param("institucion") String institucion);
 
     @Query("SELECT new com.recolectaedu.dto.response.CursoRankingAportesDTO(" +
             "c.id, c.nombre, c.universidad, c.carrera, COUNT(r)) " +

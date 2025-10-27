@@ -18,9 +18,9 @@ public class CursoService {
 
     private final CursoRepository cursoRepository;
 
-
-    public List<CursoResponse2DTO> findCursosPopulares() {
-        return cursoRepository.findCursosPopulares();
+    //US-11: Cursos Populares en institucion
+    public List<CursoResponse2DTO> findCursosPopulares(String institucion) {
+        return cursoRepository.findCursosPopulares(institucion);
     }
 
     public Page<CursoRankingAportesDTO> getRankingAportes(String universidad, String carrera, Pageable pageable) {

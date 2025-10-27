@@ -1,6 +1,7 @@
-package com.recolectaedu.repository;
+package com.recolectaedu.unit.repository;
 
 import com.recolectaedu.dto.response.CursoRankingAportesDTO;
+import com.recolectaedu.repository.CursoRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
