@@ -23,5 +23,5 @@ public class ForoController {
     @PostMapping
     public ResponseEntity<ForoResponseDTO> crearTema(@Valid @RequestBody ForoRequestDTO foroRequest){
     ForoResponseDTO response = foroService.crearTema(foroRequest);
-        return ResponseEntity.created(URI.create("/foros/" + response.getId_foro())).body(response);}
+        return ResponseEntity.created(URI.create("/foros/" + response.id_foro())).body(response);}
 }
