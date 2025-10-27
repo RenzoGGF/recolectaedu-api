@@ -53,7 +53,7 @@ public class CursoServiceTest {
     - Una Lista<CursoResponse2DTO> con 2 elementos.
     - El primer elemento debe ser "Cálculo I" (el de 100 aportes).
     - El segundo elemento debe ser "Física I" (el de 50 aportes).
-    List con atributos atributos:
+    List con atributos:
         Integer id_curso,
         String universidad,
         String nombre,
