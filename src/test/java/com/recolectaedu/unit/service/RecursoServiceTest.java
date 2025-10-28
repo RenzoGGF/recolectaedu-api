@@ -6,6 +6,8 @@ import com.recolectaedu.model.Curso;
 import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.Usuario;
+import com.recolectaedu.model.enums.FormatoRecurso;
+import com.recolectaedu.model.enums.Tipo_recurso;
 import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.UsuarioRepository; // Importar
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -30,6 +33,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias de Recurso Service (US-12)")
@@ -57,6 +62,7 @@ public class RecursoServiceTest {
     void setUp() {
         perfilMock = new Perfil(); //
         perfilMock.setNombre("Autor Test");
+        perfilMock.setApellidos("Apellido Test");
         usuarioMock = new Usuario();
         usuarioMock.setId_usuario(1);
         usuarioMock.setPerfil(perfilMock);
@@ -69,6 +75,8 @@ public class RecursoServiceTest {
                 .creado_el(LocalDateTime.now())
                 .usuario(usuarioMock)
                 .curso(cursoMock)
+                .tipo(Tipo_recurso.Apuntes) //
+                .formato(FormatoRecurso.ARCHIVO)
                 .build();
 
         recursoAntiguo = Recurso.builder()
@@ -77,6 +85,8 @@ public class RecursoServiceTest {
                 .creado_el(LocalDateTime.now().minusDays(1))
                 .usuario(usuarioMock)
                 .curso(cursoMock)
+                .tipo(Tipo_recurso.Ejercicios) //
+                .formato(FormatoRecurso.TEXTO)
                 .build();
     }
 
@@ -223,4 +233,270 @@ public class RecursoServiceTest {
         then(cursoRepository).should(times(1)).existsById(cursoId);
         then(recursoRepository).should(never()).findRecursosRecientesPorCurso(anyInt());
     }
+
+    /*
+    Escenario (búsqueda palabra clave):
+    DADO que me encuentro en el buscador de recursos
+    CUANDO escribo una palabra clave y presiono en “Buscar”
+    ENTONCES se muestran los recursos que contengan la palabra clave.
+
+    ID: CP-0901
+    Historia: US-09
+    Escenario: Búsqueda simple por palabra clave
+    Precondiciones:
+    - Un Recurso existe con titulo = "Recurso Reciente".
+    - El 'recursoRepository.search()' está configurado para devolver
+      una lista que contiene este recurso cuando se busca por "rec".
+    Datos de prueba:
+    - String keyword = "rec"
+    Pasos:
+    1. Simular recursoRepository.search("rec", null, null, null, null, null, Sort.unsorted())
+       para que devuelva una lista de Object[] conteniendo el recurso.
+    2. Ejecutar recursoService.searchRecursos("rec", null, null, null, null, null, null).
+    Resultado esperado:
+    - Una Lista<RecursoResponse2DTO> con 1 elemento.
+    - El elemento debe ser el DTO de "Recurso Reciente".
+    Explicación del test;
+    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+           una lista simulada de 1 recurso
+           cuando se llame con la palabra clave "rec".
+    WHEN:  Ejecutamos el metodo searchRecursos.
+    THEN:  Verificamos que la lista devuelta no es nula, tiene 1
+           elemento y que el servicio llamó al repositorio 1 vez.
+    */
+
+    @Test
+    @DisplayName("US-09 Debe buscar recursos por palabra clave")
+    void searchRecursos_whenKeywordProvided_shouldReturnMatchingRecursos() {
+        // GIVEN
+        String keyword = "rec";
+        Object[] repoResult = new Object[]{ recursoReciente, 1L }; // Recurso y score)
+        List<Object[]> mockResultList = Collections.singletonList(repoResult);
+        given(recursoRepository.search(
+                eq(keyword),     // keyword
+                isNull(),        // cursoId
+                isNull(),        // tipoEnum
+                isNull(),        // autorNombre
+                isNull(),        // universidad
+                isNull(),        // calificacionMinima
+                eq(Sort.unsorted()) // sort
+        )).willReturn(mockResultList);
+
+        // WHEN
+        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                keyword, null, null, null, null, null, null
+        );
+
+        // THEN
+        assertThat(resultado).isNotNull();
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+        assertThat(resultado.get(0).autorNombre()).isEqualTo("Autor Test");
+
+        then(recursoRepository).should(times(1)).search(
+                eq(keyword), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
+        );
+    }
+
+
+
+    /*
+    Escenario (búsqueda tipo):
+    DADO que me encuentro en el buscador de recursos
+    CUANDO escribo un tipo de recurso y presiono en “Buscar”
+    ENTONCES se muestran los recursos que sean de ese tipo.
+
+    ID: CP-0902
+    Historia: US-09
+    Escenario: Búsqueda simple por tipo de recurso
+    Precondiciones:
+    - Un Recurso existe con tipo = Tipo_recurso.Apuntes (recursoReciente).
+    - El 'recursoRepository.search()' está configurado para devolver
+      una lista que contiene este recurso cuando se busca por ese tipo.
+    Datos de prueba:
+    - String tipo = "Apuntes"
+    Pasos:
+    1. Simular (mock) recursoRepository.search(null, null, Tipo_recurso.Apuntes, null, null, null, Sort.unsorted())
+       para que devuelva una lista de Object[] conteniendo 'recursoReciente'.
+    2. Ejecutar recursoService.searchRecursos(null, null, "Apuntes", null, null, null, null).
+    Resultado esperado:
+    - Una Lista<RecursoResponse2DTO> con 1 elemento.
+    - El elemento debe ser el DTO de "Recurso Reciente" y tener el tipo Apuntes.
+    Explicación del test;
+    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+           una lista simulada de 1 recurso cuando se llame con el enum
+           Tipo_recurso.Apuntes.
+    WHEN:  Ejecutamos el metodo searchRecursos, pasándole el String "Apuntes".
+    THEN:  Verificamos que la lista devuelta no es nula, tiene 1
+           elemento y que el servicio llamó al repositorio con el enum correcto.
+    */
+    @Test
+    @DisplayName("US-09 [Éxito] Debe buscar recursos por tipo")
+    void searchRecursos_whenTipoProvided_shouldReturnMatchingRecursos() {
+        // GIVEN
+        String tipoString = "Apuntes";
+        Tipo_recurso tipoEnum = Tipo_recurso.Apuntes;
+
+        Object[] repoResult = new Object[]{ recursoReciente, 1L };
+        List<Object[]> mockResultList = Collections.singletonList(repoResult);
+        given(recursoRepository.search(
+                isNull(),        // keyword
+                isNull(),        // cursoId
+                eq(tipoEnum),    // tipoEnum
+                isNull(),        // autorNombre
+                isNull(),        // universidad
+                isNull(),        // calificacionMinima
+                eq(Sort.unsorted()) // sort
+        )).willReturn(mockResultList);
+
+        // WHEN
+        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                null, null, tipoString, null, null, null, null
+        );
+
+        // THEN
+        assertThat(resultado).isNotNull();
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+        assertThat(resultado.get(0).tipo()).isEqualTo(tipoEnum);
+        then(recursoRepository).should(times(1)).search(
+                isNull(), isNull(), eq(tipoEnum), isNull(), isNull(), isNull(), eq(Sort.unsorted())
+        );
+    }
+
+    /*
+    Escenario (búsqueda curso):
+    DADO que me encuentro en el buscador de recursos
+    CUANDO escribo un ID del curso y presiono en “Buscar”
+    ENTONCES se muestran los recursos que contenga ese curso.
+
+    ID: CP-0903
+    Historia: US-09
+    Escenario: Búsqueda simple por ID de curso
+    Precondiciones:
+    - Dos Recursos existen asociados al 'cursoId = 1'.
+    - El 'recursoRepository.search()' está configurado para devolver
+      una lista con ambos recursos cuando se busca por 'cursoId = 1'.
+    Datos de prueba:
+    - Integer cursoId = 1
+    Pasos:
+    1. Simular recursoRepository.search(null, 1, null, null, null, null, Sort.unsorted())
+       para que devuelva una lista de Object[] conteniendo ambos recursos.
+    2. Ejecutar recursoService.searchRecursos(null, 1, null, null, null, null, null).
+    Resultado esperado:
+    - Una Lista<RecursoResponse2DTO> con 2 elementos.
+    Explicación del test;
+    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+           una lista simulada de 2 recursos cuando se llame
+           únicamente con el 'cursoId = 1'.
+    WHEN:  Ejecutamos el metodo searchRecursos.
+    THEN:  Verificamos que la lista devuelta no es nula, tiene 2
+           elementos y que el servicio llamó al repositorio 1 vez.
+    */
+    @Test
+    @DisplayName("US-09 [Éxito] Debe buscar recursos por ID de curso")
+    void searchRecursos_whenCursoIdProvided_shouldReturnMatchingRecursos() {
+        // GIVEN
+        Integer cursoId = 1;
+        Object[] repoResult1 = new Object[]{ recursoReciente, 0L };
+        Object[] repoResult2 = new Object[]{ recursoAntiguo, 0L };
+        List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
+        given(recursoRepository.search(
+                isNull(),        // keyword
+                eq(cursoId),     // cursoId
+                isNull(),        // tipoEnum
+                isNull(),        // autorNombre
+                isNull(),        // universidad
+                isNull(),        // calificacionMinima
+                eq(Sort.unsorted()) // sort
+        )).willReturn(mockResultList);
+
+        // WHEN
+        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                null, cursoId, null, null, null, null, null
+        );
+
+        // THEN
+        assertThat(resultado).isNotNull();
+        assertThat(resultado).hasSize(2);
+        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+        assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
+        then(recursoRepository).should(times(1)).search(
+                isNull(), eq(cursoId), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
+        );
+    }
+
+
+    /*
+    Escenario (palabra clave y tipo) :
+    DADO que me encuentro en el buscador de recursos
+    CUANDO escribo una palabra clave y selecciono el tipo de recurso y presiono en “Buscar”
+    ENTONCES el sistema muestra los recursos que contengan la palabra clave
+    y que coincidan con el tipo de recursos solicitado.
+
+    ID: CP-0904
+    Historia: US-09
+    Escenario: Búsqueda combinada por palabra clave y tipo
+    Precondiciones:
+    - Un Recurso existe con titulo = "Recurso Reciente" y tipo = Tipo_recurso.Apuntes.
+    - El 'recursoRepository.search()' está configurado para devolver
+      este recurso cuando se busca por 'keyword' Y 'tipo'.
+    Datos de prueba:
+    - String keyword = "Reciente"
+    - String tipo = "Apuntes"
+    Pasos:
+    1. Simular recursoRepository.search("Reciente", null, Tipo_recurso.Apuntes, null, null, null, Sort.unsorted())
+       para que devuelva una lista de Object[] conteniendo 'recursoReciente'.
+    2. Ejecutar recursoService.searchRecursos("Reciente", null, "Apuntes", null, null, null, null).
+    Resultado esperado:
+    - Una Lista<RecursoResponse2DTO> con 1 elemento.
+    - El elemento debe ser el DTO de "Recurso Reciente".
+    Explicación del test;
+    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+           una lista simulada de 1 recurso cuando se llame
+           con la palabra clave "Reciente" Y el enum Tipo_recurso.Apuntes.
+    WHEN:  Ejecutamos el metodo searchRecursos.
+    THEN:  Verificamos que la lista devuelta no es nula, tiene 1
+           elemento y que el servicio llamó al repositorio 1 vez.
+    */
+    @Test
+    @DisplayName("US-09 [Éxito] Debe buscar recursos por palabra clave y tipo")
+    void searchRecursos_whenKeywordAndTipoProvided_shouldReturnMatchingRecursos() {
+        // GIVEN
+        String keyword = "Reciente";
+        String tipoString = "Apuntes";
+        Tipo_recurso tipoEnum = Tipo_recurso.Apuntes; //
+
+        Object[] repoResult = new Object[]{ recursoReciente, 1L }; // Recurso y score
+        List<Object[]> singletonList = Collections.singletonList(repoResult);
+        List<Object[]> mockResultList = new java.util.ArrayList<>(singletonList);
+
+        given(recursoRepository.search(
+                eq(keyword),     // keyword
+                isNull(),        // cursoId
+                eq(tipoEnum),    // tipoEnum
+                isNull(),        // autorNombre
+                isNull(),        // universidad
+                isNull(),        // calificacionMinima
+                eq(Sort.unsorted()) // sort
+        )).willReturn(mockResultList);
+
+        // WHEN
+        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                keyword, null, tipoString, null, null, null, null
+        );
+
+        // THEN
+        assertThat(resultado).isNotNull();
+        assertThat(resultado).hasSize(1);
+        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+        assertThat(resultado.get(0).tipo()).isEqualTo(tipoEnum);
+        then(recursoRepository).should(times(1)).search(
+                eq(keyword), isNull(), eq(tipoEnum), isNull(), isNull(), isNull(), eq(Sort.unsorted())
+        );
+    }
+
+    // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
+
 }
