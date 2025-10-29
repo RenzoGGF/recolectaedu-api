@@ -6,7 +6,7 @@ import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Membresia;
 import com.recolectaedu.model.Usuario;
-import com.recolectaedu.model.enums.Rol;
+import com.recolectaedu.model.enums.RolTipo;
 import com.recolectaedu.model.enums.MembresiaStatus;
 import com.recolectaedu.repository.MembresiaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
@@ -57,7 +57,7 @@ public class MembresiaService {
 
         m = membresiaRepository.save(m);
 
-        syncUserRole(user); // sincroniza el rol del usuario
+        syncUserRole(user); // sincroniza el rolTipo del usuario
 
         return toDTO(m);
     }
@@ -77,7 +77,7 @@ public class MembresiaService {
         m.setStatus(MembresiaStatus.CANCELED);
         m = membresiaRepository.save(m);
 
-        // Sincroniza rol del usuario (pasar a FREE)
+        // Sincroniza rolTipo del usuario (pasar a FREE)
         return toDTO(m);
     }
 
@@ -96,7 +96,7 @@ public class MembresiaService {
         }
         membresiaRepository.saveAll(vencidas);
 
-        // Sincronizar rol por cada usuario
+        // Sincronizar rolTipo por cada usuario
         for (Integer uid : usuariosAfectados) {
             usuarioRepository.findById(uid).ifPresent(this::syncUserRole);
         }
@@ -129,10 +129,10 @@ public class MembresiaService {
 
     private void syncUserRole(Usuario user) {
         boolean active = membresiaRepository.hasActiveMembership(user.getId_usuario(), Instant.now());
-        Rol desired = active ? Rol.PREMIUM : Rol.FREE;
-        if (user.getRol() != desired) {
-            user.setRol(desired);
-            usuarioRepository.save(user); // persiste el cambio de rol
+        RolTipo desired = active ? RolTipo.ROLE_PREMIUM : RolTipo.ROLE_FREE;
+        if (user.getRolTipo() != desired) {
+            user.setRolTipo(desired);
+            usuarioRepository.save(user); // persiste el cambio de rolTipo
         }
     }
 }

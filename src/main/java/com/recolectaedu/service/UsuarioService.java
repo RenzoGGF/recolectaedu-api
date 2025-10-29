@@ -9,7 +9,7 @@ import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Usuario;
-import com.recolectaedu.model.enums.Rol;
+import com.recolectaedu.model.enums.RolTipo;
 import com.recolectaedu.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -38,7 +38,7 @@ public class UsuarioService {
         Usuario u = Usuario.builder()
                 .email(r.getEmail())
                 .password_hash(passwordEncoder.encode(r.getPassword()))
-                .rol(resolveRol(r.getRol()))
+                .rolTipo(resolveRol(r.getRol()))
                 .build();
 
         if (r.getPerfil() != null) {
@@ -97,12 +97,12 @@ public class UsuarioService {
 
     // Helpers
 
-    private Rol resolveRol(String raw) {
-        if (raw == null || raw.isBlank()) return Rol.FREE; // default
+    private RolTipo resolveRol(String raw) {
+        if (raw == null || raw.isBlank()) return RolTipo.ROLE_FREE; // default
         try {
-            return Rol.valueOf(raw.trim().toUpperCase()); // FREE, PREMIUM, ADMIN
+            return RolTipo.valueOf(raw.trim().toUpperCase()); // FREE, PREMIUM, ADMIN
         } catch (IllegalArgumentException ex) {
-            throw new BusinessRuleException("Rol inválido. Permitidos: FREE, PREMIUM, ADMIN.");
+            throw new BusinessRuleException("RolTipo inválido. Permitidos: FREE, PREMIUM, ADMIN.");
         }
     }
       
@@ -135,7 +135,7 @@ public class UsuarioService {
         return new UserResponseDTO(
                 u.getId_usuario(),
                 u.getEmail(),
-                u.getRol().name(), // "FREE"/"PREMIUM"/"ADMIN"
+                u.getRolTipo().name(), // "FREE"/"PREMIUM"/"ADMIN"
                 u.getPerfil() == null ? null :
                         new PerfilResponseDTO(
                                 u.getPerfil().getId_usuario(),
