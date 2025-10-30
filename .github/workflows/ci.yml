@@ -1,0 +1,39 @@
+name: CI - Build & Test
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Activate test profile
+        run: echo "SPRING_PROFILES_ACTIVE=test" >> $GITHUB_ENV
+
+      - name: Compile
+        run: mvn -B -q clean compile
+
+      - name: Run tests
+        run: mvn -B -q test
+
+      - name: Package app (skip tests)
+        run: mvn -B -q -DskipTests package
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-jar
+          path: target/*.jar
