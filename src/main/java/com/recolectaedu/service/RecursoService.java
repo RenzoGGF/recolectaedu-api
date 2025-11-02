@@ -4,6 +4,7 @@ import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
+import com.recolectaedu.dto.response.AporteConContadoresResponseDTO;
 import com.recolectaedu.dto.response.AporteListadoResponseDTO;
 import com.recolectaedu.dto.response.RecursoResponseDTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
@@ -14,8 +15,10 @@ import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.model.enums.Periodo;
 import com.recolectaedu.model.enums.Tipo_recurso;
+import com.recolectaedu.repository.ComentarioRepository;
 import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
+import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -40,6 +43,8 @@ public class RecursoService {
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
     private final IAlmacenamientoService almacenamientoService;
+    private final ResenaRepository resenaRepository;
+    private final ComentarioRepository comentarioRepository;
 
     private RecursoResponseDTO toDto(Recurso r) {
         RecursoResponseDTO dto = new RecursoResponseDTO();
@@ -267,7 +272,7 @@ public class RecursoService {
 
     // US-08: Historial de aportes del usuario autenticado
     @Transactional(readOnly = true)
-    public Page<AporteListadoResponseDTO> listarMisAportes(
+    public Page<AporteConContadoresResponseDTO> listarMisAportes(
             Integer usuarioId,
             Integer cursoId,
             String tipo,
@@ -286,12 +291,31 @@ public class RecursoService {
                     .orElseThrow(() -> new IllegalArgumentException("El tipo de recurso '" + tipoBusqueda + "' no es válido."));
         }
 
-        return recursoRepository.findAportesByUsuario(
+        Page<AporteListadoResponseDTO> aportes = recursoRepository.findAportesByUsuario(
                 usuarioId,
                 cursoId,
                 tipoEnum,
                 pageable
         );
+
+        return aportes.map(aporte -> {
+            int votosPositivos = (int) resenaRepository.countByRecursoId_recursoAndEsPositivo(aporte.getId(), true);
+            int votosNegativos = (int) resenaRepository.countByRecursoId_recursoAndEsPositivo(aporte.getId(), false);
+            // int comentarios = (int) comentarioRepository.countByRecursoId(aporte.getId()); // Not possible yet
+            return new AporteConContadoresResponseDTO(
+                    aporte.getId(),
+                    aporte.getTitulo(),
+                    aporte.getTipo(),
+                    aporte.getCursoId(),
+                    aporte.getCursoNombre(),
+                    aporte.getUniversidad(),
+                    aporte.getFechaCreacion(),
+                    aporte.getFechaActualizacion(),
+                    votosPositivos,
+                    votosNegativos,
+                    0 // Hardcoded to 0
+            );
+        });
     }
 
     @Transactional(readOnly = true)
