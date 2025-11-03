@@ -299,8 +299,8 @@ public class RecursoService {
         );
 
         return aportes.map(aporte -> {
-            int votosPositivos = (int) resenaRepository.countByRecursoId_recursoAndEsPositivo(aporte.getId(), true);
-            int votosNegativos = (int) resenaRepository.countByRecursoId_recursoAndEsPositivo(aporte.getId(), false);
+            int votosPositivos = (int) resenaRepository.countByRecurso_Id_recursoAndEsPositivo(aporte.getId(), true);
+            int votosNegativos = (int) resenaRepository.countByRecurso_Id_recursoAndEsPositivo(aporte.getId(), false);
             // int comentarios = (int) comentarioRepository.countByRecursoId(aporte.getId()); // Not possible yet
             return new AporteConContadoresResponseDTO(
                     aporte.getId(),

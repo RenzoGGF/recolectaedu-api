@@ -133,8 +133,8 @@ public class RecursoServiceTest {
 
         private void mockResourceCounters(Integer resourceId, long positiveVotes,
                                           long negativeVotes, long comments) {
-            when(resenaRepository.countByRecursoId_recursoAndEsPositivo(resourceId, true)).thenReturn(positiveVotes);
-            when(resenaRepository.countByRecursoId_recursoAndEsPositivo(resourceId, false)).thenReturn(negativeVotes);
+            when(resenaRepository.countByRecurso_Id_recursoAndEsPositivo(resourceId, true)).thenReturn(positiveVotes);
+            when(resenaRepository.countByRecurso_Id_recursoAndEsPositivo(resourceId, false)).thenReturn(negativeVotes);
             // when(comentarioRepository.countByRecursoId(resourceId)).thenReturn(comments);
         }
 
@@ -204,7 +204,7 @@ public class RecursoServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getContent()).isEmpty();
 
-            verify(resenaRepository, never()).countByRecursoId_recursoAndEsPositivo(anyInt(), anyBoolean());
+            verify(resenaRepository, never()).countByRecurso_Id_recursoAndEsPositivo(anyInt(), anyBoolean());
             // verify(comentarioRepository, never()).countByRecursoId(anyInt());
         }
 
@@ -258,7 +258,7 @@ public class RecursoServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getContent()).isEmpty();
 
-            verify(resenaRepository, never()).countByRecursoId_recursoAndEsPositivo(anyInt(), anyBoolean());
+            verify(resenaRepository, never()).countByRecurso_Id_recursoAndEsPositivo(anyInt(), anyBoolean());
             // verify(comentarioRepository, never()).countByRecursoId(anyInt());
         }
     }
