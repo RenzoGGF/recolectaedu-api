@@ -9,6 +9,7 @@ import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.model.enums.FormatoRecurso;
+import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
 import com.recolectaedu.repository.ComentarioRepository;
 import com.recolectaedu.repository.CursoRepository;
@@ -1318,7 +1319,7 @@ public class RecursoServiceTest {
 
         // WHEN
         List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, null, null, null, "relevantes"
+                null, null, null, null, null, null, OrdenRecurso.valueOf("RELEVANTES")
         );
 
         // THEN
