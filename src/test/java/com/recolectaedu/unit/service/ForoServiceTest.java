@@ -160,20 +160,15 @@ public class ForoServiceTest {
     void crearTema_whenUsuarioNoExiste_shouldThrowException() {
         // GIVEN
         ForoRequestDTO requestFalla = new ForoRequestDTO("Título válido", "Contenido válido", 99);
-
-        // Configuramos el mock para que no encuentre al usuario
         given(usuarioRepository.findById(99)).willReturn(Optional.empty());
 
-        // WHEN & THEN
-        // Verificamos que la excepción ResourceNotFoundException es lanzada
+        // WHEN
         assertThrows(ResourceNotFoundException.class, () -> {
             foroService.crearTema(requestFalla);
         });
 
-        // THEN (Verificación adicional)
-        // Verificamos que 'findById' fue llamado
+        // THEN
         then(usuarioRepository).should(times(1)).findById(99);
-        // MUY IMPORTANTE: Verificamos que 'save' NUNCA fue llamado
         then(foroRepository).should(never()).save(any(Foro.class));
     }
 }
