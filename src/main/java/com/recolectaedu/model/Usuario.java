@@ -1,6 +1,6 @@
 package com.recolectaedu.model;
 
-import com.recolectaedu.model.enums.Rol;
+import com.recolectaedu.model.enums.RolTipo;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -25,7 +25,7 @@ public class Usuario {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Rol rol;
+    private RolTipo rolTipo;
 
     // Relación 1:1 con Perfil
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, optional = true, orphanRemoval = true)

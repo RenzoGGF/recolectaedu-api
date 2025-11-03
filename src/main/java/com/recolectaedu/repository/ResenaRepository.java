@@ -24,4 +24,6 @@ public interface ResenaRepository extends JpaRepository<Resena, Integer> {
     List<Resena> findByUsuario(Usuario usuario);
 
     boolean existsByUsuarioAndRecurso(Usuario usuario, Recurso recurso);
+
+    long countByRecursoId_recursoAndEsPositivo(Integer recursoId, boolean esPositivo);
 }
