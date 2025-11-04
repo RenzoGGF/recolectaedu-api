@@ -1,14 +1,20 @@
 package com.recolectaedu.controller;
 
+import com.recolectaedu.dto.request.UserRequestDTO;
 import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.dto.response.RecursoResponse2DTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
+import com.recolectaedu.dto.response.UserResponseDTO;
 import com.recolectaedu.dto.response.ResenaResponseDTO;
 import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.service.CursoService;
 import com.recolectaedu.service.RecursoService;
+import com.recolectaedu.service.UsuarioService;
 import com.recolectaedu.service.ResenaService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +26,7 @@ import java.util.List;
 public class PublicController {
     private final RecursoService recursoService;
     private final CursoService cursoService;
+    private final UsuarioService usuarioService;
     private final ResenaService resenaService;
 
     // Endpoint para US-12
@@ -60,6 +67,12 @@ public class PublicController {
         return ResponseEntity.ok(recursoService.obtenerRecursosMasValoradosPorCurso(id_curso));
     }
 
+    // US01: Registro de usuario
+    @PostMapping(value = "/usuarios/registrar", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO req) {
+        var resp = usuarioService.registrarUsuario(req);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+    }
     @GetMapping("/resenas/{id_resena}")
     public ResponseEntity<ResenaResponseDTO> obtenerResena(
             @PathVariable Integer id_resena

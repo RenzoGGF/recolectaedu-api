@@ -33,6 +33,7 @@ public class MembresiaController {
         return ResponseEntity.ok(resp);
     }
 
+    // Cancelar membresia en la cuenta logueada
     @PutMapping(value = "/cancelar", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MembresiaResponseDTO> cancelActive(
             @PathVariable Integer idUsuario) {
@@ -40,6 +41,7 @@ public class MembresiaController {
         return ResponseEntity.ok(resp);
     }
 
+    // Cancelar una membresia por id
     @PutMapping(value = "/{idMembresia}/cancelar", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MembresiaResponseDTO> cancel(
             @PathVariable Integer idUsuario) {
