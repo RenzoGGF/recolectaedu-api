@@ -153,6 +153,21 @@ public class ResenaServiceTest {
         verify(resenaRepository).save(any(Resena.class));
     }
 
+    @Test
+    @DisplayName("crearResena: falla si no autenticado")
+    void crearResena_Unauthenticated_Throws() {
+        var req = new ResenaRequestCreateDTO(1, "Comentario", true);
+
+        when(usuarioService.getAuthenticatedUsuario())
+                .thenThrow(new IllegalStateException("No autenticado"));
+
+        assertThatThrownBy(() -> resenaService.crearResena(req))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No autenticado");
+
+        verifyNoInteractions(recursoRepository, resenaRepository);
+    }
+
     // No se permiten varias reseñas al mismo recurso
     @Test
     @DisplayName("Reseña: debe lanzar excepción al intentar crear reseña dupulicada")
@@ -272,6 +287,36 @@ public class ResenaServiceTest {
                 .hasMessageContaining("No tienes permiso para operar sobre esta reseña");
 
         verify(resenaRepository, never()).save(any(Resena.class));
+    }
+
+    @Test
+    @DisplayName("actualizarResena: falla si no autenticado")
+    void actualizarResena_Unauthenticated_Throws() {
+        var req = new ResenaRequestUpdateDTO("Nuevo", true);
+
+        when(usuarioService.getAuthenticatedUsuario())
+                .thenThrow(new IllegalStateException("No autenticado"));
+
+        assertThatThrownBy(() -> resenaService.actualizarResena(1, req))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(resenaRepository, never()).findById(any());
+        verify(resenaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("actualizarParcialResena: falla si no autenticado")
+    void actualizarParcialResena_Unauthenticated_Throws() {
+        var req = new ResenaRequestPartialUpdateDTO("Nuevo parcial", null);
+
+        when(usuarioService.getAuthenticatedUsuario())
+                .thenThrow(new IllegalStateException("No autenticado"));
+
+        assertThatThrownBy(() -> resenaService.actualizarParcialResena(1, req))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(resenaRepository, never()).findById(any());
+        verify(resenaRepository, never()).save(any());
     }
 
     // Error si el voto no es booleano
@@ -462,6 +507,20 @@ public class ResenaServiceTest {
 
         verify(recursoRepository, times(1)).findById(recursoId);
         verify(resenaRepository, times(1)).findByRecurso(mockRecurso);
+    }
+
+
+    @Test
+    @DisplayName("eliminar: falla si no autenticado")
+    void eliminar_Unauthenticated_Throws() {
+        when(usuarioService.getAuthenticatedUsuario())
+                .thenThrow(new IllegalStateException("No autenticado"));
+
+        assertThatThrownBy(() -> resenaService.eliminar(1))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(resenaRepository, never()).findById(any());
+        verify(resenaRepository, never()).delete(any());
     }
 
     @Test
