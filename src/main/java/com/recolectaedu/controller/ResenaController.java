@@ -22,27 +22,6 @@ public class ResenaController {
 
     private final ResenaService resenaService;
 
-    @GetMapping("/{id_resena}")
-    public ResponseEntity<ResenaResponseDTO> obtenerResena(
-            @PathVariable Integer id_resena
-    ){
-        return ResponseEntity.ok(resenaService.obtenerResena(id_resena));
-    }
-
-    @GetMapping("/recurso/{id_recurso}")
-    public ResponseEntity<List<ResenaResponseDTO>> listarPorRecurso(
-            @PathVariable Integer id_recurso
-    ) {
-        return ResponseEntity.ok(resenaService.listarPorRecurso(id_recurso));
-    }
-
-    @GetMapping("/usuario/{id_usuario}")
-    public ResponseEntity<List<ResenaResponseDTO>> listarPorUsuario(
-            @PathVariable Integer id_usuario
-    ) {
-        return ResponseEntity.ok(resenaService.listarPorUsuario(id_usuario));
-    }
-
     @PostMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResenaResponseDTO> crearResena(
