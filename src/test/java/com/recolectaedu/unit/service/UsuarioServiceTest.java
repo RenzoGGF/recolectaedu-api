@@ -1,23 +1,32 @@
 package com.recolectaedu.unit.service;
 
+import com.recolectaedu.dto.request.PerfilRequestDTO;
 import com.recolectaedu.dto.response.UsuarioStatsResponseDTO;
+import com.recolectaedu.exception.BusinessRuleException;
+import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.*;
 import com.recolectaedu.service.UsuarioService;
+import com.recolectaedu.dto.request.UserRequestDTO;
+import com.recolectaedu.dto.response.UserResponseDTO;
+import com.recolectaedu.model.enums.RolTipo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
+
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
@@ -37,8 +46,14 @@ class UsuarioServiceTest {
     @Mock
     private BibliotecaRecursoRepository bibliotecaRecursoRepository;
 
+    @Mock
+    PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private UsuarioService usuarioService;
+
+    @Captor
+    private ArgumentCaptor<Usuario> usuarioCaptor;
 
     private Usuario mockUser;
 
@@ -47,6 +62,117 @@ class UsuarioServiceTest {
         mockUser = new Usuario();
         mockUser.setId_usuario(1);
     }
+
+    // Renzo Tests -----------------------------------------------------------
+    // US 01 - Registro de usuario: Caso exitoso
+    @Test
+    @DisplayName("Debe registrar usuario con email nuevo y rol FREE")
+    void registrarUsuario_emailNuevo_ok() {
+        // Arrange
+        UserRequestDTO req = new UserRequestDTO();
+        req.setEmail("random@gmail.com");
+        req.setPassword("Contra123!");
+        req.setRol("ROLE_FREE");
+        req.setPerfil(null);
+
+
+        when(usuarioRepository.existsByEmail("random@gmail.com")).thenReturn(false);
+        when(passwordEncoder.encode("Contra123!")).thenReturn("$hash");
+
+        Usuario u = new Usuario();
+        u.setId_usuario(1);
+        u.setEmail("random@gmail.com");
+        u.setPassword_hash("$hash");
+        u.setRolTipo(RolTipo.ROLE_FREE);
+        when(usuarioRepository.save(any(Usuario.class))).thenReturn(u);
+
+        // Act
+        UserResponseDTO resp = usuarioService.registrarUsuario(req);
+
+        // Assert
+        assertThat(resp.getId_usuario()).isEqualTo(1);
+        assertThat(resp.getEmail()).isEqualTo("random@gmail.com");
+        assertThat(resp.getRole()).isEqualTo("ROLE_FREE");
+
+        verify(usuarioRepository).existsByEmail("random@gmail.com");
+        verify(passwordEncoder).encode("Contra123!");
+        verify(usuarioRepository).save(any(Usuario.class));
+    }
+
+    // US01 - Registro de usuario: Error email duplicado
+    @Test
+    @DisplayName("Debe lanzar BusinessRuleException cuando el email ya está registrado")
+    void registrarUsuario_emailDuplicado_error() {
+        // Arrange
+        UserRequestDTO req = new UserRequestDTO();
+        req.setEmail("random@gmail.com");
+        req.setPassword("Contra123!");
+        req.setRol("ROLE_FREE");
+        req.setPerfil(null);
+
+        when(usuarioRepository.existsByEmail("random@gmail.com")).thenReturn(true);
+
+        // Act + Assert
+        assertThatThrownBy(() -> usuarioService.registrarUsuario(req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("email");
+
+        verify(usuarioRepository, never()).save(any());
+        verifyNoInteractions(passwordEncoder);
+    }
+
+    // US02 - Registro de usuario con perfil completo: Caso exitoso
+    @Test
+    @DisplayName("Debe registrar usuario con perfil completo (universidad, carrera, ciclo)")
+    void registrarUsuario_conPerfil_ok() {
+        // Arrange
+        UserRequestDTO req = new UserRequestDTO();
+        req.setEmail("perfil@gmail.com");
+        req.setPassword("Contra123!");
+        req.setRol("ROLE_FREE");
+
+        PerfilRequestDTO perfilReq = new PerfilRequestDTO();
+        perfilReq.setNombre("Renzo");
+        perfilReq.setApellidos("Gutierrez");
+        perfilReq.setUniversidad("UPC");
+        perfilReq.setCarrera("Ciencias de la Computación");
+        perfilReq.setCiclo((short) 6);
+        req.setPerfil(perfilReq);
+
+        when(usuarioRepository.existsByEmail("perfil@gmail.com")).thenReturn(false);
+        when(passwordEncoder.encode("Contra123!")).thenReturn("$hash");
+
+        // simulamos que la BD asigna ID al usuario
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> {
+            Usuario u = invocation.getArgument(0);
+            u.setId_usuario(10);
+            return u;
+        });
+
+        // Act
+        UserResponseDTO resp = usuarioService.registrarUsuario(req);
+
+        // Assert sobre el DTO básico (sin perfil, porque el DTO no lo expone)
+        assertThat(resp).isNotNull();
+        assertThat(resp.getId_usuario()).isEqualTo(10);          // ajusta al getter real (getId() si fuera el caso)
+        assertThat(resp.getEmail()).isEqualTo("perfil@gmail.com");
+        assertThat(resp.getRole()).isEqualTo("ROLE_FREE");       // o getRol(), según tu DTO
+
+        // Capturamos el Usuario que realmente se mandó a guardar
+        verify(usuarioRepository).save(usuarioCaptor.capture());
+        Usuario usuarioGuardado = usuarioCaptor.getValue();
+
+        // Aquí verificamos que el PERFIL se construyó bien
+        assertThat(usuarioGuardado.getPerfil()).isNotNull();
+        assertThat(usuarioGuardado.getPerfil().getNombre()).isEqualTo("Renzo");
+        assertThat(usuarioGuardado.getPerfil().getApellidos()).isEqualTo("Gutierrez");
+        assertThat(usuarioGuardado.getPerfil().getUniversidad()).isEqualTo("UPC");
+        assertThat(usuarioGuardado.getPerfil().getCarrera()).isEqualTo("Ciencias de la Computación");
+        assertThat(usuarioGuardado.getPerfil().getCiclo()).isEqualTo((short) 6);
+    }
+
+
+    // FIN Renzo Tests -----------------------------------------------------------
 
     @Test
     @DisplayName("Debe mostrar 5 en contador de recursos publicados cuando el usuario tiene 5 recursos")
