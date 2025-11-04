@@ -9,6 +9,7 @@ import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.model.enums.FormatoRecurso;
+import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
 import com.recolectaedu.repository.ComentarioRepository;
 import com.recolectaedu.repository.CursoRepository;
@@ -132,8 +133,8 @@ public class RecursoServiceTest {
 
         private void mockResourceCounters(Integer resourceId, long positiveVotes,
                                           long negativeVotes, long comments) {
-            when(resenaRepository.countByRecursoId_recursoAndEsPositivo(resourceId, true)).thenReturn(positiveVotes);
-            when(resenaRepository.countByRecursoId_recursoAndEsPositivo(resourceId, false)).thenReturn(negativeVotes);
+            when(resenaRepository.countByRecurso_Id_recursoAndEsPositivo(resourceId, true)).thenReturn(positiveVotes);
+            when(resenaRepository.countByRecurso_Id_recursoAndEsPositivo(resourceId, false)).thenReturn(negativeVotes);
             // when(comentarioRepository.countByRecursoId(resourceId)).thenReturn(comments);
         }
 
@@ -203,7 +204,7 @@ public class RecursoServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getContent()).isEmpty();
 
-            verify(resenaRepository, never()).countByRecursoId_recursoAndEsPositivo(anyInt(), anyBoolean());
+            verify(resenaRepository, never()).countByRecurso_Id_recursoAndEsPositivo(anyInt(), anyBoolean());
             // verify(comentarioRepository, never()).countByRecursoId(anyInt());
         }
 
@@ -257,7 +258,7 @@ public class RecursoServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getContent()).isEmpty();
 
-            verify(resenaRepository, never()).countByRecursoId_recursoAndEsPositivo(anyInt(), anyBoolean());
+            verify(resenaRepository, never()).countByRecurso_Id_recursoAndEsPositivo(anyInt(), anyBoolean());
             // verify(comentarioRepository, never()).countByRecursoId(anyInt());
         }
     }
@@ -483,7 +484,7 @@ public class RecursoServiceTest {
     /*
     Escenario (búsqueda tipo):
     DADO que me encuentro en el buscador de recursos
-    CUANDO escribo un tipo de recurso y presiono en “Buscar”
+    CUANDO selecciono un tipo de recurso y presiono en “Buscar”
     ENTONCES se muestran los recursos que sean de ese tipo.
 
     ID: CP-0902
@@ -855,7 +856,7 @@ public class RecursoServiceTest {
                     null, null, tipoInvalido, null, null, null, null
             );
         });
-        assertThat(exception.getMessage()).isEqualTo("Tipo de recurso inválido: " + tipoInvalido);
+        assertThat(exception.getMessage()).isEqualTo("El tipo de recurso '" + tipoInvalido+ "' no es válido.");
 
         // THEN
         then(recursoRepository).should(never()).search(
@@ -947,7 +948,7 @@ public class RecursoServiceTest {
         - String autor = "Autor"
         - String universidad = "UNMSM"
         Pasos:
-        1. Simular (mock) recursoRepository.search(null, null, null, "Autor", "UNMSM", null, Sort.unsorted())
+        1. Simular recursoRepository.search(null, null, null, "Autor", "UNMSM", null, Sort.unsorted())
            para que devuelva una lista de Object[] conteniendo ambos recursos.
         2. Ejecutar recursoService.searchRecursos(null, null, null, "Autor", "UNMSM", null, null).
         Resultado esperado:
@@ -1202,7 +1203,7 @@ public class RecursoServiceTest {
     /*
     Escenario (Ordenamiento base o “Recientes”)
     DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO ingreso en la sección de ordenamiento nada o recientes
+    CUANDO selecciono ordenamiento nada o recientes
     ENTONCES el sistema mostrará los recursos en orden según creación.
 
     ID: CP-1005
@@ -1269,7 +1270,7 @@ public class RecursoServiceTest {
     /*
     Escenario (Ordenamiento “Relevantes”)
     DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO ingreso en la sección de ordenamiento relevantes
+    CUANDO selecciono ordenamiento relevantes
     ENTONCES el sistema mostrará los recursos en orden según valoración.
 
     ID: CP-1006
@@ -1318,7 +1319,7 @@ public class RecursoServiceTest {
 
         // WHEN
         List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, null, null, null, "relevantes"
+                null, null, null, null, null, null, OrdenRecurso.valueOf("RELEVANTES")
         );
 
         // THEN

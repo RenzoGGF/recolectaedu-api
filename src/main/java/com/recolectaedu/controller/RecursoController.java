@@ -9,6 +9,7 @@ import com.recolectaedu.dto.response.RecursoResponseDTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.service.RecursoService;
 import jakarta.validation.Valid;
+import com.recolectaedu.model.enums.OrdenRecurso;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +41,7 @@ public class RecursoController {
             @RequestParam(required = false) String autor,
             @RequestParam(required = false) String universidad,
             @RequestParam(required = false) Integer calificacionMinima,
-            @RequestParam(required = false) String ordenarPor
+            @RequestParam(required = false) OrdenRecurso ordenarPor
     ) {
         List<RecursoResponse2DTO> response = recursoService.searchRecursos(keyword, cursoId, tipo, autor, universidad, calificacionMinima, ordenarPor);
         return ResponseEntity.ok(response);
