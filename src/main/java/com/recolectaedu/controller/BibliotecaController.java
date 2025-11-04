@@ -19,7 +19,7 @@ public class BibliotecaController {
     public ResponseEntity<BibliotecaResponseDTO> obtenerBibliotecaPorUsuario(
             @PathVariable Integer id_usuario
     ) {
-        return ResponseEntity.ok(bibliotecaService.obtenerBibliotecaPorUsuarioId(id_usuario));
+        return ResponseEntity.ok(bibliotecaService.obtenerBIbliotecaDeUsuario());
     }
 
     @PostMapping
@@ -27,6 +27,6 @@ public class BibliotecaController {
             @PathVariable Integer id_usuario
     ) {
         return ResponseEntity.created(URI.create("/usuarios/" + id_usuario + "/biblioteca"))
-                .body(bibliotecaService.crearBiblioteca(id_usuario));
+                .body(bibliotecaService.crearBiblioteca());
     }
 }
