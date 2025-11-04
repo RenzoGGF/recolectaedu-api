@@ -72,6 +72,7 @@ public class PublicController {
     public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO req) {
         var resp = usuarioService.registrarUsuario(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+    }
     @GetMapping("/resenas/{id_resena}")
     public ResponseEntity<ResenaResponseDTO> obtenerResena(
             @PathVariable Integer id_resena
