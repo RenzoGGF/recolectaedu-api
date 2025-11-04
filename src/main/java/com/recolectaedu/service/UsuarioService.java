@@ -12,6 +12,10 @@ import com.recolectaedu.model.Usuario;
 import com.recolectaedu.model.enums.RolTipo;
 import com.recolectaedu.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -146,5 +150,16 @@ public class UsuarioService {
                                 u.getPerfil().getCiclo()
                         )
         );
+    }
+
+    // Auth
+    // @Transactional(readOnly = true)
+    public Usuario getAuthenticatedUsuario() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            throw new AccessDeniedException("No autenticado");
+        String email = auth.getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
     }
 }

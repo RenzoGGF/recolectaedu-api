@@ -2,6 +2,7 @@ package com.recolectaedu.service;
 
 import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
+import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
 import com.recolectaedu.dto.response.AporteConContadoresResponseDTO;
@@ -20,6 +21,7 @@ import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -114,14 +116,14 @@ public class RecursoService {
     }
 
     // US - 9 y 10
-    public List<RecursoResponse2DTO> searchRecursos(String keyword, Integer cursoId, String tipo, String autor, String universidad, Integer calificacionMinima, String ordenarPor) {
+    public List<RecursoResponse2DTO> searchRecursos(String keyword, Integer cursoId, String tipo, String autor, String universidad, Integer calificacionMinima, OrdenRecurso ordenarPor) {
         Tipo_recurso tipoEnum = null;
-        if (tipo != null && !tipo.isEmpty()) {
-            try {
-                tipoEnum = Tipo_recurso.valueOf(tipo); // Sensible a mayúsculas/minúsculas
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Tipo de recurso inválido: " + tipo);
-            }
+        if (tipo != null && !tipo.trim().isEmpty()) {
+            final String tipoBusqueda = tipo;
+            tipoEnum = Arrays.stream(Tipo_recurso.values())
+                    .filter(tr -> tr.name().equalsIgnoreCase(tipoBusqueda))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("El tipo de recurso '" + tipoBusqueda + "' no es válido."));
         }
         List<Object[]> resultados = recursoRepository.search(
                 keyword,
@@ -132,8 +134,7 @@ public class RecursoService {
                 calificacionMinima,
                 Sort.unsorted()
         );
-
-        if ("relevantes".equalsIgnoreCase(ordenarPor)) {
+        if (ordenarPor == OrdenRecurso.RELEVANTES) {
             resultados.sort((o1, o2) -> {
                 try {
                     Long score1 = ((Number) o1[1]).longValue();
@@ -148,8 +149,8 @@ public class RecursoService {
         }
         return resultados.stream()
                 .map(resultado -> {
-                    Recurso recurso = (Recurso) resultado[0]; // Extraemos el Recurso
-                    return mapToRecursoResponse2DTO(recurso); // Usamos tu helper
+                    Recurso recurso = (Recurso) resultado[0];
+                    return mapToRecursoResponse2DTO(recurso);
                 })
                 .collect(Collectors.toList());
     }
@@ -299,8 +300,8 @@ public class RecursoService {
         );
 
         return aportes.map(aporte -> {
-            int votosPositivos = (int) resenaRepository.countByRecursoId_recursoAndEsPositivo(aporte.getId(), true);
-            int votosNegativos = (int) resenaRepository.countByRecursoId_recursoAndEsPositivo(aporte.getId(), false);
+            int votosPositivos = (int) resenaRepository.countByRecurso_Id_recursoAndEsPositivo(aporte.getId(), true);
+            int votosNegativos = (int) resenaRepository.countByRecurso_Id_recursoAndEsPositivo(aporte.getId(), false);
             // int comentarios = (int) comentarioRepository.countByRecursoId(aporte.getId()); // Not possible yet
             return new AporteConContadoresResponseDTO(
                     aporte.getId(),
