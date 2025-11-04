@@ -2,12 +2,11 @@ package com.recolectaedu.unit.service;
 
 import com.recolectaedu.dto.request.ForoRequestDTO;
 import com.recolectaedu.dto.response.ForoResponseDTO;
-import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Foro;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.ForoRepository;
-import com.recolectaedu.repository.UsuarioRepository;
 import com.recolectaedu.service.ForoService;
+import com.recolectaedu.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,11 +14,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
-import java.util.Optional;
-
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,12 +29,10 @@ import static org.mockito.Mockito.times;
 @DisplayName("Pruebas unitarias de Foro Service")
 public class ForoServiceTest {
 
-    //PONER DEPENDENCIAS DE DIAGRAMAS DE COMPONENTES
     @Mock
     private ForoRepository foroRepository;
-
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private UsuarioService usuarioService; //
 
     @InjectMocks
     private ForoService foroService;
@@ -46,6 +41,10 @@ public class ForoServiceTest {
     private Foro foroGuardadoMock;
     private ForoRequestDTO requestDTO;
     private LocalDateTime tiempoPrueba;
+
+    private void setUpAuthentication(Usuario usuario) {
+        given(usuarioService.getAuthenticatedUsuario()).willReturn(usuario);
+    }
 
     @BeforeEach
     void setUp() {
@@ -58,8 +57,7 @@ public class ForoServiceTest {
 
         requestDTO = new ForoRequestDTO(
                 "Título del tema de prueba",
-                "Este es el contenido del tema de prueba que es lo suficientemente largo.",
-                1
+                "Este es el contenido del tema de prueba que es lo suficientemente largo."
         );
 
         foroGuardadoMock = Foro.builder()
@@ -73,43 +71,40 @@ public class ForoServiceTest {
 
     /*
     Escenario 1: Creación de tema exitosa
-    DADO que estoy autenticado y me encuentro en el formulario de creación del tema del foro
-    CUANDO completo los datos requeridos (titulo, descripcion) y presiono en “Crear”
+    DADO que estoy autenticado
+    CUANDO completo los datos requeridos (titulo, descripcion)
     ENTONCES el sistema crea el tema y muestra un mensaje de confirmación.
 
     ID: CP-2001
     Historia: US-20
     Escenario: Creación de tema de foro exitosa
     Precondiciones:
-    - Un 'Usuario' existe en la BD con ID 1.
-    - El 'ForoRequestDTO' trae un título válido, contenido válido y el ID 1 del usuario.
+    - El 'UsuarioService' devuelve un 'usuarioMock' (ID 1).
+    - El 'ForoRequestDTO' trae un título válido y contenido válido.
     Datos de prueba:
-    - requestDTO: { titulo: "Título...", contenido: "Contenido...", id_usuario: 1 }
-    - usuarioMock: { id: 1, email: "..." }
-    - foroGuardadoMock: { id: 100, titulo: "...", usuario: usuarioMock, creado_el: ... }
+    - requestDTO
+    - usuarioMock
+    - foroGuardadoMock
     Pasos:
-    1. Simular `usuarioRepository.findById(1)` para que devuelva `Optional.of(usuarioMock)`.
+    1. Simular `usuarioService.getAuthenticatedUsuario()` para que devuelva `usuarioMock`.
     2. Simular `foroRepository.save(any(Foro.class))` para que devuelva `foroGuardadoMock`.
     3. Ejecutar `foroService.crearTema(requestDTO)`.
     Resultado esperado:
     - Un `ForoResponseDTO` con los datos del `foroGuardadoMock`.
     - { id_foro: 100, titulo: "Título...", creado_el: ..., id_usuario: 1 }
-
     Explicación del test;
-    GIVEN: Configuramos mocks para un 'Usuario' (ID 1) que sí existe y
-           configuramos el 'foroRepository' para que devuelva el objeto 'Foro'
-           simulado cuando se llame a save().
-    WHEN:  Ejecutamos el metodo 'crearTema' con el DTO válido.
+    GIVEN: Configuramos el mock de `usuarioService` para que devuelva un
+           usuario autenticado (ID 1) y el `foroRepository` para que guarde el foro.
+    WHEN:  Ejecutamos el metodo 'crearTema' con el DTO válido (sin ID).
     THEN:  Verificamos que la respuesta no es nula,
            que contiene los datos esperados (ID 100, ID 1) y
-           que 'findById' y 'save' fueron llamados 1 vez cada uno.
+           que 'getAuthenticatedUsuario' y 'save' fueron llamados 1 vez cada uno.
     */
-
     @Test
-    @DisplayName("Debe crear un tema de foro exitosamente")
+    @DisplayName("E - Debe crear un tema de foro exitosamente")
     void crearTema_whenDatosValidos_shouldCrearForoExitosamente() {
         // GIVEN
-        given(usuarioRepository.findById(1)).willReturn(Optional.of(usuarioMock));
+        setUpAuthentication(usuarioMock); //
         given(foroRepository.save(any(Foro.class))).willReturn(foroGuardadoMock);
 
         // WHEN
@@ -121,59 +116,56 @@ public class ForoServiceTest {
         assertThat(response.id_usuario()).isEqualTo(1);
         assertThat(response.titulo()).isEqualTo("Título del tema de prueba");
         assertThat(response.creado_el()).isEqualTo(tiempoPrueba);
-        then(usuarioRepository).should(times(1)).findById(1);
+
+        then(usuarioService).should(times(1)).getAuthenticatedUsuario(); //
         then(foroRepository).should(times(1)).save(any(Foro.class));
     }
 
 
     /*
-    Escenario 2: Creación falla (Usuario no existe)
-    DADO que los datos de validación (título, contenido) son correctos
-    CUANDO el 'id_usuario' enviado no corresponde a un usuario existente
-    ENTONCES el sistema no crea un nuevo tema y lanza un mensaje de error.
+    Escenario 2: Creación falla por Usuario no autenticado
+    DADO que el 'UsuarioService' no encuentra un usuario autenticado
+    CUANDO se intenta crear un tema
+    ENTONCES el sistema lanza una excepción AccessDeniedException
+    Y no se crea ningún tema.
 
     ID: CP-2002
     Historia: US-20
-    Escenario: Creación de tema de foro falla (Usuario no existe)
+    Escenario: Creación de tema de foro falla por Usuario no autenticado
     Precondiciones:
-    - El 'ForoRequestDTO' tiene un 'id_usuario' (ej. 99) que NO existe.
+    - El 'UsuarioService' lanza una excepción al buscar al usuario.
     Datos de prueba:
-    - requestFalla: { titulo: "Título válido", contenido: "Contenido válido", id_usuario: 99 }
+    - requestDTO: { titulo: "Título...", contenido: "Contenido..." }
     Pasos:
-    1. Simular  `usuarioRepository.findById(99)` para que devuelva `Optional.empty()`.
-    2. Ejecutar `foroService.crearTema(requestFalla)`.
-    3. Verificar que se lanza la excepción `ResourceNotFoundException`.
+    1. Simular `usuarioService.getAuthenticatedUsuario()` para que lance `AccessDeniedException`.
+    2. Ejecutar `foroService.crearTema(requestDTO)`.
+    3. Verificar que se lanza la excepción `AccessDeniedException`.
     Resultado esperado:
-    - Se lanza una excepción `ResourceNotFoundException`.
+    - Se lanza una excepción `AccessDeniedException`.
     - El 'foroRepository.save()' no se ejecuta.
 
     Explicación del test;
-    GIVEN: Configuramos el mock 'usuarioRepository' para que NO encuentre
-           al usuario con ID 99 (devuelve Optional.empty()).
-    WHEN:  Ejecutamos el metodo 'crearTema' con el ID de usuario inválido,
-           y verificamos  que lanza la excepción esperada.
-    THEN:  Verificamos que el sistema lanza una 'ResourceNotFoundException' y
+    GIVEN: Configuramos el mock 'usuarioService' para que falle
+           al intentar obtener el usuario autenticado.
+    WHEN:  Ejecutamos el metodo 'crearTema'.
+    THEN:  Verificamos que el sistema lanza una 'AccessDeniedException' y
            que el metodo 'foroRepository.save()' NUNCA fue invocado.
     */
     @Test
-    @DisplayName("Debe lanzar ResourceNotFoundException si el usuario no existe")
-    void crearTema_whenUsuarioNoExiste_shouldThrowException() {
+    @DisplayName("F - Debe lanzar AccessDeniedException si el usuario no está autenticado")
+    void crearTema_whenUsuarioNoAutenticado_shouldThrowException() {
         // GIVEN
-        ForoRequestDTO requestFalla = new ForoRequestDTO("Título válido", "Contenido válido", 99);
-        given(usuarioRepository.findById(99)).willReturn(Optional.empty());
+        ForoRequestDTO requestFalla = new ForoRequestDTO("Título válido", "Contenido válido");
+
+        given(usuarioService.getAuthenticatedUsuario()).willThrow(new AccessDeniedException("Acceso denegado"));
 
         // WHEN
-        assertThrows(ResourceNotFoundException.class, () -> {
+        assertThrows(AccessDeniedException.class, () -> {
             foroService.crearTema(requestFalla);
         });
 
         // THEN
-        then(usuarioRepository).should(times(1)).findById(99);
+        then(usuarioService).should(times(1)).getAuthenticatedUsuario();
         then(foroRepository).should(never()).save(any(Foro.class));
     }
 }
-
-
-
-
-
