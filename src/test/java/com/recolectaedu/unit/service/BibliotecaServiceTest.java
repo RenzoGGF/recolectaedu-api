@@ -9,6 +9,7 @@ import com.recolectaedu.repository.BibliotecaRepository;
 import com.recolectaedu.service.BibliotecaService;
 import com.recolectaedu.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -40,6 +41,7 @@ class BibliotecaServiceTest {
     }
 
     @Test
+    @DisplayName("Crear biblioteca: debe crear biblioteca correctamente")
     void crearBiblioteca_Success() {
         // Arrange
         setupAuthentication();
@@ -63,6 +65,7 @@ class BibliotecaServiceTest {
     }
 
     @Test
+    @DisplayName("Debe lanzar una excepción por duplicidad")
     void crearBiblioteca_Duplicated_ThrowsException() {
         // Arrange
         setupAuthentication();
@@ -79,6 +82,7 @@ class BibliotecaServiceTest {
     }
 
     @Test
+    @DisplayName("Debe obtener la biblioteca del usuario")
     void obtenerBibliotecaDeUsuario_Success() {
         // Arrange
         setupAuthentication();
@@ -99,6 +103,7 @@ class BibliotecaServiceTest {
     }
 
     @Test
+    @DisplayName("Debe lanzar una excepción por no existir la biblioteca")
     void obtenerBibliotecaDeUsuario_NotFound_ThrowsException() {
         // Arrange
         setupAuthentication();
