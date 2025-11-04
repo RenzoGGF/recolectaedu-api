@@ -17,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/resenas")
 @RequiredArgsConstructor
+@PreAuthorize("isAuthenticated()")
 public class ResenaController {
 
     private final ResenaService resenaService;
