@@ -21,6 +21,7 @@ import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
