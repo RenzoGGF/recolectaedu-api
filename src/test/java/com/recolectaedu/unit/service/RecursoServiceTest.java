@@ -3,6 +3,7 @@ package com.recolectaedu.unit.service;
 import com.recolectaedu.dto.response.AporteConContadoresResponseDTO;
 import com.recolectaedu.dto.response.AporteListadoResponseDTO;
 import com.recolectaedu.dto.response.RecursoResponse2DTO;
+import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Curso;
 import com.recolectaedu.model.Perfil;
@@ -35,9 +36,10 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -1332,5 +1334,41 @@ public class RecursoServiceTest {
         then(recursoRepository).should(times(1)).search(
                 isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
         );
+    }
+
+    @Test
+    @DisplayName("obtenerRecursosMasValoradosPorCurso: retorna lista cuando el curso existe")
+    void obtenerMasValorados_Success() {
+        Integer cursoId = 10;
+        when(cursoRepository.findById(cursoId)).thenReturn(Optional.of(new Curso()));
+
+        RecursoValoradoResponseDTO dto1 = RecursoValoradoResponseDTO.builder()
+                .id_recurso(1).titulo("A").votos_utiles(5).votos_no_utiles(1).votos_netos(4).build();
+        RecursoValoradoResponseDTO dto2 = RecursoValoradoResponseDTO.builder()
+                .id_recurso(2).titulo("B").votos_utiles(3).votos_no_utiles(0).votos_netos(3).build();
+
+        when(recursoRepository.findMasValoradosPorCursoConMetricas(cursoId))
+                .thenReturn(List.of(dto1, dto2));
+
+        var result = recursoService.obtenerRecursosMasValoradosPorCurso(cursoId);
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).id_recurso()).isEqualTo(1);
+        verify(cursoRepository).findById(cursoId);
+        verify(recursoRepository).findMasValoradosPorCursoConMetricas(cursoId);
+    }
+
+    @Test
+    @DisplayName("obtenerRecursosMasValoradosPorCurso: lanza ResourceNotFound si curso no existe")
+    void obtenerMasValorados_NotFound_ThrowsException() {
+        Integer cursoId = 999;
+        when(cursoRepository.findById(cursoId)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> recursoService.obtenerRecursosMasValoradosPorCurso(cursoId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Curso no encontrado");
+
+        verify(cursoRepository).findById(cursoId);
+        verify(recursoRepository, never()).findMasValoradosPorCursoConMetricas(any());
     }
 }
