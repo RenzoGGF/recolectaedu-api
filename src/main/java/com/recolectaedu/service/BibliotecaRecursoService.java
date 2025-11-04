@@ -7,6 +7,7 @@ import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Biblioteca;
 import com.recolectaedu.model.BibliotecaRecurso;
 import com.recolectaedu.model.Recurso;
+import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.BibliotecaRecursoRepository;
 import com.recolectaedu.repository.BibliotecaRepository;
 import com.recolectaedu.repository.RecursoRepository;
@@ -23,6 +24,7 @@ public class BibliotecaRecursoService {
     private final RecursoRepository recursoRepository;
     private final BibliotecaRepository bibliotecaRepository;
     private final BibliotecaRecursoRepository bibliotecaRecursoRepository;
+    private final UsuarioService usuarioService;
 
     private BibliotecaRecursoResponseDTO toDto(BibliotecaRecurso bibliotecaRecurso) {
         return BibliotecaRecursoResponseDTO.builder()
@@ -34,11 +36,19 @@ public class BibliotecaRecursoService {
 
     @Transactional
     public BibliotecaRecursoResponseDTO guardarRecursoEnBiblioteca(Integer id_biblioteca, BibliotecaRecursoRequestDTO request) {
+        if (request == null || request.id_recurso() == null) {
+            throw new IllegalArgumentException("El id del recurso es obligatorio");
+        }
+
+        Usuario usuario = usuarioService.getAuthenticatedUsuario();
+
         Recurso recurso = recursoRepository.findById(request.id_recurso())
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
         Biblioteca biblioteca = bibliotecaRepository.findById(id_biblioteca)
                 .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        validateOwnership(biblioteca, usuario);
 
         // Verificar duplicidad
         if (bibliotecaRecursoRepository.existsByBibliotecaAndRecurso(biblioteca, recurso)) {
@@ -58,8 +68,13 @@ public class BibliotecaRecursoService {
 
     @Transactional(readOnly = true)
     public List<BibliotecaRecursoResponseDTO> listarRecursos(Integer id_biblioteca) {
+        Usuario usuario = usuarioService.getAuthenticatedUsuario();
+
         Biblioteca biblioteca = bibliotecaRepository.findById(id_biblioteca)
                 .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        validateOwnership(biblioteca, usuario);
+
         return bibliotecaRecursoRepository.findByBiblioteca(biblioteca)
                 .stream()
                 .map(this::toDto)
@@ -68,8 +83,12 @@ public class BibliotecaRecursoService {
 
     @Transactional
     public void eliminarRecurso(Integer id_biblioteca, Integer id_recurso) {
+        Usuario usuario = usuarioService.getAuthenticatedUsuario();
+
         Biblioteca biblioteca = bibliotecaRepository.findById(id_biblioteca)
                 .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
+
+        validateOwnership(biblioteca, usuario);
 
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
@@ -78,5 +97,11 @@ public class BibliotecaRecursoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado en la biblioteca"));
 
         bibliotecaRecursoRepository.delete(bibliotecaRecurso);
+    }
+
+    private void validateOwnership(Biblioteca biblioteca, Usuario auth) {
+        if (!biblioteca.getUsuario().getId_usuario().equals(auth.getId_usuario())) {
+            throw new BusinessRuleException("No autorizado para operar sobre esta biblioteca");
+        }
     }
 }

@@ -16,11 +16,11 @@ public class BibliotecaService {
 
     private final UsuarioRepository usuarioRepository;
     private final BibliotecaRepository bibliotecaRepository;
+    private final UsuarioService usuarioService;
 
     @Transactional
-    public BibliotecaResponseDTO crearBiblioteca(Integer id_usuario) {
-        Usuario usuario = usuarioRepository.findById(id_usuario)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+    public BibliotecaResponseDTO crearBiblioteca() {
+        Usuario usuario = usuarioService.getAuthenticatedUsuario();
 
         bibliotecaRepository.findByUsuario(usuario)
                 .ifPresent(biblioteca -> {
@@ -42,9 +42,8 @@ public class BibliotecaService {
     }
 
     @Transactional
-    public BibliotecaResponseDTO obtenerBibliotecaPorUsuarioId(Integer id_usuario) {
-        Usuario usuario = usuarioRepository.findById(id_usuario)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+    public BibliotecaResponseDTO obtenerBIbliotecaDeUsuario() {
+        Usuario usuario = usuarioService.getAuthenticatedUsuario();
 
         Biblioteca biblioteca = bibliotecaRepository.findByUsuario(usuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Biblioteca no encontrada"));
