@@ -4,12 +4,9 @@ import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
-import com.recolectaedu.dto.response.RecursoResponse2DTO;
 import com.recolectaedu.dto.response.RecursoResponseDTO;
-import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.service.RecursoService;
 import jakarta.validation.Valid;
-import com.recolectaedu.model.enums.OrdenRecurso;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/recursos")

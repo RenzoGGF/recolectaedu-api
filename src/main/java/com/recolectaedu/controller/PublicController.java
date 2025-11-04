@@ -5,10 +5,12 @@ import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.dto.response.RecursoResponse2DTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.dto.response.UserResponseDTO;
+import com.recolectaedu.dto.response.ResenaResponseDTO;
 import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.service.CursoService;
 import com.recolectaedu.service.RecursoService;
 import com.recolectaedu.service.UsuarioService;
+import com.recolectaedu.service.ResenaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +27,7 @@ public class PublicController {
     private final RecursoService recursoService;
     private final CursoService cursoService;
     private final UsuarioService usuarioService;
+    private final ResenaService resenaService;
 
     // Endpoint para US-12
     @GetMapping("/recursos/curso/{cursoId}/recientes")
@@ -57,7 +60,7 @@ public class PublicController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("recursos/curso/{id_curso}/mas-valorados")
+    @GetMapping("/recursos/curso/{id_curso}/mas-valorados")
     public ResponseEntity<List<RecursoValoradoResponseDTO>> obtenerMasValoradosPorCurso(
             @PathVariable("id_curso") Integer id_curso
     ) {
@@ -69,5 +72,24 @@ public class PublicController {
     public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO req) {
         var resp = usuarioService.registrarUsuario(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+    @GetMapping("/resenas/{id_resena}")
+    public ResponseEntity<ResenaResponseDTO> obtenerResena(
+            @PathVariable Integer id_resena
+    ){
+        return ResponseEntity.ok(resenaService.obtenerResena(id_resena));
+    }
+
+    @GetMapping("/resenas/recurso/{id_recurso}")
+    public ResponseEntity<List<ResenaResponseDTO>> listarPorRecurso(
+            @PathVariable Integer id_recurso
+    ) {
+        return ResponseEntity.ok(resenaService.listarPorRecurso(id_recurso));
+    }
+
+    @GetMapping("/resenas/usuario/{id_usuario}")
+    public ResponseEntity<List<ResenaResponseDTO>> listarPorUsuario(
+            @PathVariable Integer id_usuario
+    ) {
+        return ResponseEntity.ok(resenaService.listarPorUsuario(id_usuario));
     }
 }

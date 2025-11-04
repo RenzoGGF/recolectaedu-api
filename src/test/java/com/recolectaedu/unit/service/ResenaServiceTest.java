@@ -28,10 +28,11 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
@@ -115,6 +116,15 @@ public class ResenaServiceTest {
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(usuario);
     }
 
+    /*
+    US-13: Reseñar un recurso
+     */
+    /*
+    Dado que estoy autenticado y en la página de un recurso válido,
+    y completo el formulario con contenido no vacío y un voto (positivo/negativo),
+    cuando presiono "Publicar",
+    entonces el sistema guarda la reseña asociada al recurso y a mi usuario.
+     */
     @Test
     @DisplayName("Reseña: debe crear reseña correctamente")
     void create_ValidData_Success() {
@@ -143,6 +153,7 @@ public class ResenaServiceTest {
         verify(resenaRepository).save(any(Resena.class));
     }
 
+    // No se permiten varias reseñas al mismo recurso
     @Test
     @DisplayName("Reseña: debe lanzar excepción al intentar crear reseña dupulicada")
     void create_DuplicateData_ThrowsException() {
@@ -164,6 +175,7 @@ public class ResenaServiceTest {
         verify(resenaRepository, never()).save(any(Resena.class));
     }
 
+    // No se puede crear reseñar a un recurso que no exista
     @Test
     @DisplayName("Debe lanzar una exepción al intentar reseñar un recurso que no exista")
     void create_ResourceNotFound_ThrowsException() {
@@ -182,6 +194,7 @@ public class ResenaServiceTest {
         verify(resenaRepository, never()).save(any(Resena.class));
     }
 
+    // El comentario de la reseña no puede ser nulo
     @Test
     @DisplayName("Debe lanzar excepción cuando el comentario está vacío")
     void createResena_ComentarioNulo_ThrowsException() {
@@ -197,6 +210,7 @@ public class ResenaServiceTest {
         verify(resenaRepository, never()).save(any(Resena.class));
     }
 
+    // El voto no puede ser nulo
     @Test
     @DisplayName("Debe lanzar excepción cuando es_positivo es nulo")
     void createResena_EsPositivoNulo_ThrowsException() {
@@ -212,6 +226,96 @@ public class ResenaServiceTest {
         verify(resenaRepository, never()).save(any(Resena.class));
     }
 
+    /*
+    US-14: Votar utilidad de recursos
+     */
+    // Se actualiza parcialmente la reseña (solo el voto)
+    @Test
+    @DisplayName("Debe actualizar parcialmente la reseña (solo el voto)")
+    void partialUpdate_Voto_Success() {
+        Integer resenaId = 1;
+        Boolean nuevoVoto = false;
+
+        ResenaRequestPartialUpdateDTO request = new ResenaRequestPartialUpdateDTO(null, nuevoVoto);
+        Resena resenaExistente = createResenaMock(resenaId, "Comentario original", true, mockUsuario, mockRecurso);
+
+        when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
+        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
+
+        resenaExistente.setEs_positivo(nuevoVoto);
+        resenaExistente.setActualizado_el(LocalDateTime.now());
+
+        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaExistente);
+
+        ResenaResponseDTO response = resenaService.actualizarParcialResena(resenaId, request);
+
+        assertThat(response).isNotNull();
+        assertThat(response.es_positivo()).isEqualTo(nuevoVoto);
+        verify(resenaRepository).save(any(Resena.class));
+    }
+
+    // Solo se puede modificar la reseña de la que se es propietario
+    @Test
+    @DisplayName("Debe lanzar excepción si el usuario no es el propietario de la reseña al actualizar parcialmente")
+    void partialUpdate_InvalidOwnership_ThrowsException() {
+        Integer resenaId = 1;
+        Boolean nuevoVoto = false;
+        ResenaRequestPartialUpdateDTO request = new ResenaRequestPartialUpdateDTO(null, nuevoVoto);
+        Resena resenaExistente = createResenaMock(resenaId, "Comentario original", true, mockUsuario, mockRecurso);
+
+        when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
+        Usuario otroUsuario = new Usuario();
+        setUpAuthenication(otroUsuario.getEmail(), otroUsuario);
+
+        assertThatThrownBy(() -> resenaService.actualizarParcialResena(resenaId, request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("No tienes permiso para operar sobre esta reseña");
+
+        verify(resenaRepository, never()).save(any(Resena.class));
+    }
+
+    // Error si el voto no es booleano
+    @Test
+    @DisplayName("Debe lanzar excepción si el formato de 'es_positivo' no es un booleano")
+    void update_InvalidVotoFormat_ThrowsException() {
+        Integer resenaId = 1;
+        String nuevoContenido = "Nuevo comentario";
+        String formatoIncorrectoVoto = "No es booleano";
+
+        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, (Boolean) null);
+
+        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
+
+        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("El valor del voto no puede estar vacío");
+
+        verify(resenaRepository, never()).save(any(Resena.class));
+    }
+
+    // Error si el voto es nulo
+    @Test
+    @DisplayName("Debe lanzar excepción si el voto es nulo")
+    void update_NullVoto_ThrowsException() {
+        Integer resenaId = 1;
+        String nuevoContenido = "Nuevo comentario";
+        Boolean votoNulo = null;
+
+        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, votoNulo);
+
+        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
+
+        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("El valor del voto no puede estar vacío");
+
+        verify(resenaRepository, never()).save(any(Resena.class));
+    }
+
+    /*
+    No pertenecen a ninguna US (o podrían ser otra US)
+     */
+    //
     @Test
     @DisplayName("Debe eliminar la reseña correctamente, verificando la autoría")
     void delete_ValidOwnership_Success() {
@@ -227,6 +331,7 @@ public class ResenaServiceTest {
         verify(resenaRepository, times(1)).delete(mockResena); // Verificamos que se haya llamado al delete
     }
 
+    // No se puede eliminar un recurso del que no se sea propietario
     @Test
     @DisplayName("Debe lanzar excepción si el usuario no es el propietario de la reseña")
     void delete_InvalidOwnership_ThrowsException() {
@@ -247,6 +352,7 @@ public class ResenaServiceTest {
         verify(resenaRepository, never()).delete(any(Resena.class));
     }
 
+    // Actualizar una reseña por completo
     @Test
     @DisplayName("Debe actualizar completamente la reseña")
     void update_ValidData_Success() {
@@ -301,67 +407,6 @@ public class ResenaServiceTest {
     }
 
     @Test
-    @DisplayName("Debe actualizar parcialmente la reseña (solo el voto)")
-    void partialUpdate_Voto_Success() {
-        Integer resenaId = 1;
-        Boolean nuevoVoto = false;
-
-        ResenaRequestPartialUpdateDTO request = new ResenaRequestPartialUpdateDTO(null, nuevoVoto);
-        Resena resenaExistente = createResenaMock(resenaId, "Comentario original", true, mockUsuario, mockRecurso);
-
-        when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
-        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
-
-        resenaExistente.setEs_positivo(nuevoVoto);
-        resenaExistente.setActualizado_el(LocalDateTime.now());
-
-        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaExistente);
-
-        ResenaResponseDTO response = resenaService.actualizarParcialResena(resenaId, request);
-
-        assertThat(response).isNotNull();
-        assertThat(response.es_positivo()).isEqualTo(nuevoVoto);
-        verify(resenaRepository).save(any(Resena.class));
-    }
-
-    @Test
-    @DisplayName("Debe lanzar excepción si el usuario no es el propietario de la reseña al actualizar parcialmente")
-    void partialUpdate_InvalidOwnership_ThrowsException() {
-        Integer resenaId = 1;
-        Boolean nuevoVoto = false;
-        ResenaRequestPartialUpdateDTO request = new ResenaRequestPartialUpdateDTO(null, nuevoVoto);
-        Resena resenaExistente = createResenaMock(resenaId, "Comentario original", true, mockUsuario, mockRecurso);
-
-        when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
-        Usuario otroUsuario = new Usuario();
-        setUpAuthenication(otroUsuario.getEmail(), otroUsuario);
-
-        assertThatThrownBy(() -> resenaService.actualizarParcialResena(resenaId, request))
-                .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("No tienes permiso para operar sobre esta reseña");
-
-        verify(resenaRepository, never()).save(any(Resena.class));
-    }
-
-    @Test
-    @DisplayName("Debe lanzar excepción si el formato de 'es_positivo' no es un booleano")
-    void update_InvalidVotoFormat_ThrowsException() {
-        Integer resenaId = 1;
-        String nuevoContenido = "Nuevo comentario";
-        String formatoIncorrectoVoto = "No es booleano";
-
-        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, (Boolean) null);
-
-        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
-
-        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El valor del voto no puede estar vacío");
-
-        verify(resenaRepository, never()).save(any(Resena.class));
-    }
-
-    @Test
     @DisplayName("Debe lanzar excepción si el contenido de la reseña está vacío")
     void update_EmptyContent_ThrowsException() {
         Integer resenaId = 1;
@@ -379,21 +424,57 @@ public class ResenaServiceTest {
         verify(resenaRepository, never()).save(any(Resena.class));
     }
 
+    /*
+    Para obtener reseñas por recurso
+     */
     @Test
-    @DisplayName("Debe lanzar excepción si el voto es nulo")
-    void update_NullVoto_ThrowsException() {
-        Integer resenaId = 1;
-        String nuevoContenido = "Nuevo comentario";
-        Boolean votoNulo = null;
+    @DisplayName("Debe listar reseñas por recurso correctamente")
+    void listByResource_ValidResource_Success() {
+        Integer recursoId = 1;
 
-        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, votoNulo);
+        Usuario userA = createUsuarioMock(1, "a@example.com");
+        Usuario userB = createUsuarioMock(2, "b@example.com");
 
-        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
+        Perfil perfilA = createPerfilMock(1, userA, "NombreA", "ApellidoB", "Universidad", "Carrera", (short)1);
+        Perfil perfilB = createPerfilMock(2, userB, "NombreB", "ApellidoB", "Universidad", "Carrera", (short)1);
 
-        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El valor del voto no puede estar vacío");
+        userA.setPerfil(perfilA);
+        userB.setPerfil(perfilB);
 
-        verify(resenaRepository, never()).save(any(Resena.class));
+        Resena resena1 = createResenaMock(1, "Comentario 1", true,  userA, mockRecurso);
+        Resena resena2 = createResenaMock(2, "Comentario 2", false, userB, mockRecurso);
+
+        given(recursoRepository.findById(recursoId)).willReturn(Optional.of(mockRecurso));
+        given(resenaRepository.findByRecurso(mockRecurso)).willReturn(List.of(resena1, resena2));
+
+        List<ResenaResponseDTO> responseList = resenaService.listarPorRecurso(recursoId);
+
+        assertThat(responseList).isNotNull();
+        assertThat(responseList).hasSize(2);
+
+        assertThat(responseList.get(0).id_resena()).isEqualTo(1);
+        assertThat(responseList.get(0).contenido()).isEqualTo("Comentario 1");
+        assertThat(responseList.get(0).es_positivo()).isTrue();
+
+        assertThat(responseList.get(1).id_resena()).isEqualTo(2);
+        assertThat(responseList.get(1).contenido()).isEqualTo("Comentario 2");
+        assertThat(responseList.get(1).es_positivo()).isFalse();
+
+        verify(recursoRepository, times(1)).findById(recursoId);
+        verify(resenaRepository, times(1)).findByRecurso(mockRecurso);
+    }
+
+    @Test
+    @DisplayName("Debe lanzar excepción al listar reseñas de un recurso no existente")
+    void listByResource_ResourceNotFound_ThrowsException() {
+        Integer recursoId = 999;
+        given(recursoRepository.findById(recursoId)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> resenaService.listarPorRecurso(recursoId))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Recurso no encontrado");
+
+        verify(recursoRepository, times(1)).findById(recursoId);
+        verify(resenaRepository, never()).findByRecurso(any());
     }
 }
