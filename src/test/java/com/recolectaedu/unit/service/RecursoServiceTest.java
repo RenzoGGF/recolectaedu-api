@@ -1,5 +1,7 @@
 package com.recolectaedu.unit.service;
 
+import com.recolectaedu.dto.response.AporteConContadoresResponseDTO;
+import com.recolectaedu.dto.response.AporteListadoResponseDTO;
 import com.recolectaedu.dto.response.RecursoResponse2DTO;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Curso;
@@ -7,40 +9,51 @@ import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.model.enums.FormatoRecurso;
+import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.model.enums.Tipo_recurso;
+import com.recolectaedu.repository.ComentarioRepository;
 import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
+import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
 import com.recolectaedu.service.IAlmacenamientoService;
 import com.recolectaedu.service.RecursoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verify;
 
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Pruebas unitarias de Recurso Service (US-12)")
+@DisplayName("Pruebas unitarias de Recurso Service")
 public class RecursoServiceTest {
     @Mock
     private RecursoRepository recursoRepository;
@@ -52,6 +65,12 @@ public class RecursoServiceTest {
     private UsuarioRepository usuarioRepository;
     @Mock
     private IAlmacenamientoService almacenamientoService;
+
+    @Mock
+    private ResenaRepository resenaRepository;
+
+    @Mock
+    private ComentarioRepository comentarioRepository;
 
     @InjectMocks
     private RecursoService recursoService;
@@ -92,6 +111,156 @@ public class RecursoServiceTest {
                 .tipo(Tipo_recurso.Ejercicios) //
                 .formato(FormatoRecurso.TEXTO)
                 .build();
+    }
+
+    @Nested
+    @DisplayName("US-08: Historial de Aportes")
+    class HistorialDeAportesTests {
+
+        private Usuario mockUsuario;
+
+        @BeforeEach
+        void setUp() {
+            mockUsuario = createMockUsuario(1, "john@example.com");
+        }
+
+        private Usuario createMockUsuario(Integer id, String email) {
+            Usuario usuario = new Usuario();
+            usuario.setId_usuario(id);
+            usuario.setEmail(email);
+            return usuario;
+        }
+
+        private void mockResourceCounters(Integer resourceId, long positiveVotes,
+                                          long negativeVotes, long comments) {
+            when(resenaRepository.countByRecurso_Id_recursoAndEsPositivo(resourceId, true)).thenReturn(positiveVotes);
+            when(resenaRepository.countByRecurso_Id_recursoAndEsPositivo(resourceId, false)).thenReturn(negativeVotes);
+            // when(comentarioRepository.countByRecursoId(resourceId)).thenReturn(comments);
+        }
+
+        @Test
+        @DisplayName("Debe listar recursos del usuario con toda la información ordenados por fecha (más reciente primero)")
+        void getMyResources_UserWithPublishedResources_ReturnsListOrderedByDateDesc() {
+            // Arrange
+            Integer userId = 1;
+            LocalDateTime now = LocalDateTime.now();
+
+            AporteListadoResponseDTO aporte1 = new AporteListadoResponseDTO(1, "Resumen de Cálculo I", Tipo_recurso.Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(5), now.minusDays(5));
+            AporteListadoResponseDTO aporte2 = new AporteListadoResponseDTO(2, "Tutorial de Spring Boot", Tipo_recurso.Practicas, 1, "Cálculo I", "UNMSM", now.minusDays(2), now.minusDays(2));
+            AporteListadoResponseDTO aporte3 = new AporteListadoResponseDTO(3, "Fórmulas de Derivadas", Tipo_recurso.Ejercicios, 1, "Cálculo I", "UNMSM", now, now);
+
+            List<AporteListadoResponseDTO> aportes = Arrays.asList(aporte3, aporte2, aporte1);
+            Page<AporteListadoResponseDTO> page = new PageImpl<>(aportes);
+
+            when(usuarioRepository.existsById(userId)).thenReturn(true);
+            when(recursoRepository.findAportesByUsuario(eq(userId), any(), any(), any(Pageable.class)))
+                    .thenReturn(page);
+
+            mockResourceCounters(1, 5L, 1L, 3L);
+            mockResourceCounters(2, 8L, 2L, 7L);
+            mockResourceCounters(3, 0L, 0L, 0L);
+
+            // Act
+             Page<AporteConContadoresResponseDTO> response = recursoService.listarMisAportes(userId, null, null, Pageable.unpaged());
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.getContent()).hasSize(3);
+    
+            assertThat(response.getContent().get(0).getTitulo()).isEqualTo("Fórmulas de Derivadas");
+            assertThat(response.getContent().get(0).getTipo()).isEqualTo(Tipo_recurso.Ejercicios);
+    
+            assertThat(response.getContent().get(1).getTitulo()).isEqualTo("Tutorial de Spring Boot");
+            assertThat(response.getContent().get(2).getTitulo()).isEqualTo("Resumen de Cálculo I");
+    
+            AporteConContadoresResponseDTO firstResource = response.getContent().get(0);
+            assertThat(firstResource.getTitulo()).isNotNull();
+            assertThat(firstResource.getTipo()).isNotNull();
+            assertThat(firstResource.getFechaCreacion()).isNotNull();
+            assertThat(firstResource.getCursoNombre()).isNotNull();
+            assertThat(firstResource.getVotosPositivos()).isEqualTo(0);
+            assertThat(firstResource.getVotosNegativos()).isEqualTo(0);
+            assertThat(firstResource.getComentarios()).isEqualTo(0);
+    
+            assertThat(response.getContent().get(0).getFechaCreacion())
+                    .isAfter(response.getContent().get(1).getFechaCreacion());
+            assertThat(response.getContent().get(1).getFechaCreacion())
+                    .isAfter(response.getContent().get(2).getFechaCreacion());
+        }
+
+        @Test
+        @DisplayName("Debe retornar lista vacía cuando el usuario no tiene recursos publicados")
+        void getMyResources_UserWithoutResources_ReturnsEmptyList() {
+            // Arrange
+            Integer userId = 1;
+            when(usuarioRepository.existsById(userId)).thenReturn(true);
+            when(recursoRepository.findAportesByUsuario(eq(userId), any(), any(), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+            // Act
+            Page<AporteConContadoresResponseDTO> response = recursoService.listarMisAportes(userId, null, null, Pageable.unpaged());
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.getContent()).isEmpty();
+
+            verify(resenaRepository, never()).countByRecurso_Id_recursoAndEsPositivo(anyInt(), anyBoolean());
+            // verify(comentarioRepository, never()).countByRecursoId(anyInt());
+        }
+
+        @Test
+        @DisplayName("Debe filtrar y mostrar solo recursos de tipo Apuntes cuando se aplica ese filtro")
+        void getMyResourcesByType_FilterByApuntes_ReturnsOnlyApuntesResources() {
+            // Arrange
+            Integer userId = 1;
+            String filterType = "Apuntes";
+            LocalDateTime now = LocalDateTime.now();
+
+            AporteListadoResponseDTO aporte1 = new AporteListadoResponseDTO(1, "Resumen de Cálculo I", Tipo_recurso.Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(3), now.minusDays(3));
+            AporteListadoResponseDTO aporte2 = new AporteListadoResponseDTO(2, "Guía de Programación", Tipo_recurso.Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(1), now.minusDays(1));
+            List<AporteListadoResponseDTO> apuntesAportes = Arrays.asList(aporte2, aporte1);
+
+            when(usuarioRepository.existsById(userId)).thenReturn(true);
+            when(recursoRepository.findAportesByUsuario(eq(userId), any(), eq(Tipo_recurso.Apuntes), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(apuntesAportes));
+
+            mockResourceCounters(1, 0L, 0L, 0L);
+            mockResourceCounters(2, 0L, 0L, 0L);
+
+            // Act
+            Page<AporteConContadoresResponseDTO> response = recursoService.listarMisAportes(userId, null, filterType, Pageable.unpaged());
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.getContent()).hasSize(2);
+            assertThat(response.getContent()).allMatch(r -> r.getTipo() == Tipo_recurso.Apuntes);
+            assertThat(response.getContent().get(0).getTitulo()).isEqualTo("Guía de Programación");
+            assertThat(response.getContent().get(1).getTitulo()).isEqualTo("Resumen de Cálculo I");
+            
+            assertThat(response.getContent().get(0).getFechaCreacion())
+                    .isAfter(response.getContent().get(1).getFechaCreacion());
+        }
+
+        @Test
+        @DisplayName("Debe retornar lista vacía cuando se aplica filtro y no hay recursos de ese tipo")
+        void getMyResourcesByType_FilterWithNoResults_ReturnsEmptyList() {
+            // Arrange
+            Integer userId = 1;
+            String filterType = "Practicas";
+            when(usuarioRepository.existsById(userId)).thenReturn(true);
+            when(recursoRepository.findAportesByUsuario(eq(userId), any(), eq(Tipo_recurso.Practicas), any(Pageable.class)))
+                    .thenReturn(new PageImpl<>(Collections.emptyList()));
+
+            // Act
+            Page<AporteConContadoresResponseDTO> response = recursoService.listarMisAportes(userId, null, filterType, Pageable.unpaged());
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.getContent()).isEmpty();
+
+            verify(resenaRepository, never()).countByRecurso_Id_recursoAndEsPositivo(anyInt(), anyBoolean());
+            // verify(comentarioRepository, never()).countByRecursoId(anyInt());
+        }
     }
 
     //PRUEBAS DE LA US-12! -------------------------------------------------------------------------------------------
@@ -315,7 +484,7 @@ public class RecursoServiceTest {
     /*
     Escenario (búsqueda tipo):
     DADO que me encuentro en el buscador de recursos
-    CUANDO escribo un tipo de recurso y presiono en “Buscar”
+    CUANDO selecciono un tipo de recurso y presiono en “Buscar”
     ENTONCES se muestran los recursos que sean de ese tipo.
 
     ID: CP-0902
@@ -687,7 +856,7 @@ public class RecursoServiceTest {
                     null, null, tipoInvalido, null, null, null, null
             );
         });
-        assertThat(exception.getMessage()).isEqualTo("Tipo de recurso inválido: " + tipoInvalido);
+        assertThat(exception.getMessage()).isEqualTo("El tipo de recurso '" + tipoInvalido+ "' no es válido.");
 
         // THEN
         then(recursoRepository).should(never()).search(
@@ -779,7 +948,7 @@ public class RecursoServiceTest {
         - String autor = "Autor"
         - String universidad = "UNMSM"
         Pasos:
-        1. Simular (mock) recursoRepository.search(null, null, null, "Autor", "UNMSM", null, Sort.unsorted())
+        1. Simular recursoRepository.search(null, null, null, "Autor", "UNMSM", null, Sort.unsorted())
            para que devuelva una lista de Object[] conteniendo ambos recursos.
         2. Ejecutar recursoService.searchRecursos(null, null, null, "Autor", "UNMSM", null, null).
         Resultado esperado:
@@ -1034,7 +1203,7 @@ public class RecursoServiceTest {
     /*
     Escenario (Ordenamiento base o “Recientes”)
     DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO ingreso en la sección de ordenamiento nada o recientes
+    CUANDO selecciono ordenamiento nada o recientes
     ENTONCES el sistema mostrará los recursos en orden según creación.
 
     ID: CP-1005
@@ -1101,7 +1270,7 @@ public class RecursoServiceTest {
     /*
     Escenario (Ordenamiento “Relevantes”)
     DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO ingreso en la sección de ordenamiento relevantes
+    CUANDO selecciono ordenamiento relevantes
     ENTONCES el sistema mostrará los recursos en orden según valoración.
 
     ID: CP-1006
@@ -1150,7 +1319,7 @@ public class RecursoServiceTest {
 
         // WHEN
         List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, null, null, null, "relevantes"
+                null, null, null, null, null, null, OrdenRecurso.valueOf("RELEVANTES")
         );
 
         // THEN
