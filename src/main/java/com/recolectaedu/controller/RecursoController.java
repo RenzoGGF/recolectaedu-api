@@ -26,15 +26,6 @@ public class RecursoController {
 
     private final RecursoService recursoService;
 
-
-
-    @GetMapping("/curso/{id_curso}/mas-valorados")
-    public ResponseEntity<List<RecursoValoradoResponseDTO>> obtenerMasValoradosPorCurso(
-            @PathVariable("id_curso") Integer id_curso
-    ) {
-        return ResponseEntity.ok(recursoService.obtenerRecursosMasValoradosPorCurso(id_curso));
-    }
-
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<RecursoResponseDTO> crearRecursoJson(
             @Valid @RequestBody RecursoCreateRequestDTO request

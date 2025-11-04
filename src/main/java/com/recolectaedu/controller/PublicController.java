@@ -2,6 +2,7 @@ package com.recolectaedu.controller;
 
 import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.dto.response.RecursoResponse2DTO;
+import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
 import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.service.CursoService;
 import com.recolectaedu.service.RecursoService;
@@ -49,7 +50,10 @@ public class PublicController {
         return ResponseEntity.ok(response);
     }
 
-
-
-
+    @GetMapping("recursos/curso/{id_curso}/mas-valorados")
+    public ResponseEntity<List<RecursoValoradoResponseDTO>> obtenerMasValoradosPorCurso(
+            @PathVariable("id_curso") Integer id_curso
+    ) {
+        return ResponseEntity.ok(recursoService.obtenerRecursosMasValoradosPorCurso(id_curso));
+    }
 }
