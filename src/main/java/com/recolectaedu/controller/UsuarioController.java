@@ -28,11 +28,11 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final RecursoService recursoService;
 
-    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO req) {
-        var resp = usuarioService.registrarUsuario(req);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
-    }
+//    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO req) {
+//        var resp = usuarioService.registrarUsuario(req);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+//    }
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponseDTO> getById(@PathVariable Integer id) {
@@ -40,7 +40,7 @@ public class UsuarioController {
         return ResponseEntity.ok(resp);
     }
 
-    @PutMapping(value = "/{id}/profile", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}/perfil", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponseDTO> upsertProfile(
             @PathVariable Integer id,
             @Valid @RequestBody PerfilRequestDTO body) {

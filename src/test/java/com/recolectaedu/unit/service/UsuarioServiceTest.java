@@ -162,7 +162,7 @@ class UsuarioServiceTest {
         verify(usuarioRepository).save(usuarioCaptor.capture());
         Usuario usuarioGuardado = usuarioCaptor.getValue();
 
-        // Aquí verificamos que el PERFIL se construyó bien
+        // verificamos que el PERFIL se construyó bien
         assertThat(usuarioGuardado.getPerfil()).isNotNull();
         assertThat(usuarioGuardado.getPerfil().getNombre()).isEqualTo("Renzo");
         assertThat(usuarioGuardado.getPerfil().getApellidos()).isEqualTo("Gutierrez");
@@ -171,6 +171,82 @@ class UsuarioServiceTest {
         assertThat(usuarioGuardado.getPerfil().getCiclo()).isEqualTo((short) 6);
     }
 
+    // US03 - Actualizar perfil de usuario: Caso exitoso
+    @Test
+    @DisplayName("Debe actualizar el perfil existente de un usuario")
+    void actualizarPerfilDTO_usuarioConPerfil_ok() {
+        // Arrange
+        Integer idUsuario = 1;
+
+        // Usuario existente con perfil viejo
+        Usuario usuario = new Usuario();
+        usuario.setId_usuario(idUsuario);
+        usuario.setEmail("perfilold@gmail.com");
+        usuario.setRolTipo(RolTipo.ROLE_FREE);
+
+
+        Perfil perfilExistente = new Perfil();
+        perfilExistente.setId_usuario(idUsuario);
+        perfilExistente.setNombre("Nombre viejo");
+        perfilExistente.setApellidos("Apellido viejo");
+        perfilExistente.setUniversidad("UNI");
+        perfilExistente.setCarrera("Ingeniería X");
+        perfilExistente.setCiclo((short) 3);
+
+        perfilExistente.setUsuario(usuario);
+        usuario.setPerfil(perfilExistente);
+
+        // DTO con nuevos datos de perfil
+        PerfilRequestDTO dto = new PerfilRequestDTO();
+        dto.setNombre("Renzo");
+        dto.setApellidos("Gutierrez");
+        dto.setUniversidad("UPC");
+        dto.setCarrera("Ingeniería de Software");
+        dto.setCiclo((short) 7);
+
+        // mocks
+        when(usuarioRepository.findById(idUsuario)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        var resp = usuarioService.actualizarPerfilDTO(idUsuario, dto);
+
+        // Assert: el servicio devuelve algo
+        assertThat(resp).isNotNull();
+        assertThat(resp.getId_usuario()).isEqualTo(idUsuario);
+
+        // Y el perfil del usuario quedó actualizado en memoria
+        Perfil perfilFinal = usuario.getPerfil();
+        assertThat(perfilFinal).isNotNull();
+        assertThat(perfilFinal.getNombre()).isEqualTo("Renzo");
+        assertThat(perfilFinal.getApellidos()).isEqualTo("Gutierrez");
+        assertThat(perfilFinal.getUniversidad()).isEqualTo("UPC");
+        assertThat(perfilFinal.getCarrera()).isEqualTo("Ingeniería de Software");
+        assertThat(perfilFinal.getCiclo()).isEqualTo((short) 7);
+
+        // Verificamos interacciones con el repo
+        verify(usuarioRepository).findById(idUsuario);
+        verify(usuarioRepository).save(any(Usuario.class));
+    }
+
+    // US04 - Eliminar usuario: Caso exitoso
+    @Test
+    @DisplayName("Debe eliminar un usuario existente sin errores")
+    void eliminarUsuario_usuarioExistente_ok() {
+        // Arrange
+        Integer idUsuario = 1;
+        Usuario usuario = new Usuario();
+        usuario.setId_usuario(idUsuario);
+
+        when(usuarioRepository.findById(idUsuario)).thenReturn(Optional.of(usuario));
+
+        // Act
+        usuarioService.eliminarUsuario(idUsuario);
+
+        // Assert
+        verify(usuarioRepository).findById(idUsuario);
+        verify(usuarioRepository).delete(usuario);
+    }
 
     // FIN Renzo Tests -----------------------------------------------------------
 
