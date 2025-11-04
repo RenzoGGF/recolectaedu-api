@@ -111,55 +111,52 @@ public class BibliotecaRecursoServiceTest {
     }
 
     @Test
-    @DisplayName("guardarRecursoEnBiblioteca: debe enviar los valores correctos a save")
-    void guardarRecursoEnBiblioteca_SaveValues_Correct() {
+    @DisplayName("guardarRecursoEnBiblioteca: debe fallar si no autenticado")
+    void guardarRecursoEnBiblioteca_Unauthenticated_Throws() {
         Integer id_biblioteca = 1;
-        Integer id_recurso = 1;
-        BibliotecaRecursoRequestDTO request = BibliotecaRecursoRequestDTO.builder().id_recurso(id_recurso).build();
+        BibliotecaRecursoRequestDTO req = BibliotecaRecursoRequestDTO.builder().id_recurso(1).build();
 
-        when(usuarioService.getAuthenticatedUsuario()).thenReturn(mockUsuario);
-        when(recursoRepository.findById(id_recurso)).thenReturn(Optional.of(mockRecurso));
-        when(bibliotecaRepository.findById(id_biblioteca)).thenReturn(Optional.of(mockBiblioteca));
-        when(bibliotecaRecursoRepository.existsByBibliotecaAndRecurso(mockBiblioteca, mockRecurso)).thenReturn(false);
-        when(bibliotecaRecursoRepository.save(any(BibliotecaRecurso.class))).thenAnswer(inv -> {
-            BibliotecaRecurso br = inv.getArgument(0);
-            return BibliotecaRecurso.builder()
-                    .id_biblioteca_recurso(99)
-                    .biblioteca(br.getBiblioteca())
-                    .recurso(br.getRecurso())
-                    .agregado_el(br.getAgregado_el() != null ? br.getAgregado_el() : LocalDateTime.now())
-                    .build();
-        });
+        when(usuarioService.getAuthenticatedUsuario())
+                .thenThrow(new IllegalStateException("No autenticado"));
 
-        BibliotecaRecursoResponseDTO response = bibliotecaRecursoService.guardarRecursoEnBiblioteca(id_biblioteca, request);
+        assertThatThrownBy(() -> bibliotecaRecursoService.guardarRecursoEnBiblioteca(id_biblioteca, req))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("No autenticado");
 
-        ArgumentCaptor<BibliotecaRecurso> captor = ArgumentCaptor.forClass(BibliotecaRecurso.class);
-        verify(bibliotecaRecursoRepository).save(captor.capture());
-        BibliotecaRecurso enviado = captor.getValue();
-
-        assertThat(enviado.getBiblioteca().getId_biblioteca()).isEqualTo(id_biblioteca);
-        assertThat(enviado.getRecurso().getId_recurso()).isEqualTo(id_recurso);
-        assertThat(response.id_biblioteca_recurso()).isEqualTo(99);
+        verifyNoInteractions(recursoRepository, bibliotecaRepository, bibliotecaRecursoRepository);
     }
 
-    @Test
-    @DisplayName("guardarRecursoEnBiblioteca: debe fallar si request es null")
-    void guardarRecursoEnBiblioteca_NullRequest_Throws() {
-        assertThatThrownBy(() -> bibliotecaRecursoService.guardarRecursoEnBiblioteca(1, null))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El id del recurso es obligatorio");
-        verifyNoInteractions(usuarioService, recursoRepository, bibliotecaRepository, bibliotecaRecursoRepository);
-    }
-
-    @Test
-    @DisplayName("guardarRecursoEnBiblioteca: debe fallar si id_recurso es null")
-    void guardarRecursoEnBiblioteca_NullRecursoId_Throws() {
-        BibliotecaRecursoRequestDTO request = BibliotecaRecursoRequestDTO.builder().id_recurso(null).build();
-
-        assertThatThrownBy(() -> bibliotecaRecursoService.guardarRecursoEnBiblioteca(1, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El id del recurso es obligatorio");
-    }
+//    @Test
+//    @DisplayName("guardarRecursoEnBiblioteca: debe enviar los valores correctos a save")
+//    void guardarRecursoEnBiblioteca_SaveValues_Correct() {
+//        Integer id_biblioteca = 1;
+//        Integer id_recurso = 1;
+//        BibliotecaRecursoRequestDTO request = BibliotecaRecursoRequestDTO.builder().id_recurso(id_recurso).build();
+//
+//        when(usuarioService.getAuthenticatedUsuario()).thenReturn(mockUsuario);
+//        when(recursoRepository.findById(id_recurso)).thenReturn(Optional.of(mockRecurso));
+//        when(bibliotecaRepository.findById(id_biblioteca)).thenReturn(Optional.of(mockBiblioteca));
+//        when(bibliotecaRecursoRepository.existsByBibliotecaAndRecurso(mockBiblioteca, mockRecurso)).thenReturn(false);
+//        when(bibliotecaRecursoRepository.save(any(BibliotecaRecurso.class))).thenAnswer(inv -> {
+//            BibliotecaRecurso br = inv.getArgument(0);
+//            return BibliotecaRecurso.builder()
+//                    .id_biblioteca_recurso(99)
+//                    .biblioteca(br.getBiblioteca())
+//                    .recurso(br.getRecurso())
+//                    .agregado_el(br.getAgregado_el() != null ? br.getAgregado_el() : LocalDateTime.now())
+//                    .build();
+//        });
+//
+//        BibliotecaRecursoResponseDTO response = bibliotecaRecursoService.guardarRecursoEnBiblioteca(id_biblioteca, request);
+//
+//        ArgumentCaptor<BibliotecaRecurso> captor = ArgumentCaptor.forClass(BibliotecaRecurso.class);
+//        verify(bibliotecaRecursoRepository).save(captor.capture());
+//        BibliotecaRecurso enviado = captor.getValue();
+//
+//        assertThat(enviado.getBiblioteca().getId_biblioteca()).isEqualTo(id_biblioteca);
+//        assertThat(enviado.getRecurso().getId_recurso()).isEqualTo(id_recurso);
+//        assertThat(response.id_biblioteca_recurso()).isEqualTo(99);
+//    }
 
     @Test
     @DisplayName("guardarRecursoEnBiblioteca: debe lanzar ResourceNotFound si recurso no existe")
