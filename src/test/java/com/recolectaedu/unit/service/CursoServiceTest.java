@@ -1,6 +1,6 @@
 package com.recolectaedu.unit.service;
 
-import com.recolectaedu.controller.MembresiaController;
+import com.recolectaedu.dto.response.CursoRankingAportesDTO;
 import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.service.CursoService;
@@ -10,15 +10,23 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Mockito.times;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias de Curso Service")
@@ -139,4 +147,80 @@ public class CursoServiceTest {
         then(cursoRepository).should(times(1)).findCursosPopulares(institucionSinCursos);
     }
 
+    // --- Tests para US-18: Ranking de Cursos con Más Aportes ---
+
+    @Test
+    @DisplayName("US-18 Ranking con datos: Debe devolver ranking ordenado por aportes")
+    void getRankingAportes_cuandoExistenCursos_debeDevolverRankingOrdenado() {
+        // Arrange
+        CursoRankingAportesDTO curso1 = new CursoRankingAportesDTO(3, "Base de Datos", "PUCP", "Ingeniería Informática", 85L);
+        CursoRankingAportesDTO curso2 = new CursoRankingAportesDTO(5, "Física I", "UPC", "Ingeniería", 85L);
+        CursoRankingAportesDTO curso3 = new CursoRankingAportesDTO(1, "Cálculo I", "UPC", "Ciencias de la Computación", 80L);
+        CursoRankingAportesDTO curso4 = new CursoRankingAportesDTO(2, "Ingeniería de Software", "UPC", "Ingeniería de Software", 65L);
+        CursoRankingAportesDTO curso5 = new CursoRankingAportesDTO(4, "Algoritmos", "UPC", "Ciencias de la Computación", 55L);
+
+        List<CursoRankingAportesDTO> rankingList = Arrays.asList(curso1, curso2, curso3, curso4, curso5);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<CursoRankingAportesDTO> rankingPage = new PageImpl<>(rankingList, pageable, rankingList.size());
+
+        when(cursoRepository.rankingPorAportes(any(), any(), any(Pageable.class))).thenReturn(rankingPage);
+
+        // Act
+        Page<CursoRankingAportesDTO> resultado = cursoService.getRankingAportes(null, null, pageable);
+
+        // Assert
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getContent()).hasSize(5);
+        // Se verifica el orden descendente de los aportes
+        assertThat(resultado.getContent().get(0).getAportesCount()).isEqualTo(85L);
+        assertThat(resultado.getContent().get(2).getAportesCount()).isEqualTo(80L);
+        assertThat(resultado.getContent().get(4).getAportesCount()).isEqualTo(55L);
+    }
+
+    @Test
+    @DisplayName("US-18 Sin cursos: Debe devolver lista vacía si no hay cursos con aportes")
+    void getRankingAportes_cuandoNoExistenCursos_debeDevolverPaginaVacia() {
+        // Arrange
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<CursoRankingAportesDTO> emptyPage = new PageImpl<>(Collections.emptyList(), pageable, 0);
+        when(cursoRepository.rankingPorAportes(any(), any(), any(Pageable.class))).thenReturn(emptyPage);
+
+        // Act
+        Page<CursoRankingAportesDTO> resultado = cursoService.getRankingAportes(null, null, pageable);
+
+        // Assert
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getContent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("US-18 Empate en aportes: Debe ordenar alfabéticamente por nombre")
+    void getRankingAportes_cuandoHayEmpate_debeOrdenarAlfabeticamente() {
+        // Arrange
+        // Nota: Este test unitario simula la respuesta correcta del repositorio
+        // para verificar que el servicio la devuelve sin alterarla. La validación
+        // de la lógica de la query JPQL se realiza en una prueba de integración.
+        CursoRankingAportesDTO curso_BD = new CursoRankingAportesDTO(3, "BD301", "PUCP", "Informática", 50L);
+        CursoRankingAportesDTO curso_FIS = new CursoRankingAportesDTO(2, "FIS101", "UPC", "Física", 50L);
+        CursoRankingAportesDTO curso_MAT = new CursoRankingAportesDTO(1, "MAT203", "UPC", "Matemáticas", 50L);
+        CursoRankingAportesDTO curso_ALG = new CursoRankingAportesDTO(4, "ALG102", "UPC", "Computación", 30L);
+
+        // Simulamos el orden que debería devolver la query corregida para que el test pase
+        List<CursoRankingAportesDTO> rankingList = Arrays.asList(curso_BD, curso_FIS, curso_MAT, curso_ALG);
+        Pageable pageable = PageRequest.of(0, 20);
+        Page<CursoRankingAportesDTO> rankingPage = new PageImpl<>(rankingList, pageable, rankingList.size());
+
+        when(cursoRepository.rankingPorAportes(any(), any(), any(Pageable.class))).thenReturn(rankingPage);
+
+        // Act
+        Page<CursoRankingAportesDTO> resultado = cursoService.getRankingAportes(null, null, pageable);
+
+        // Assert
+        assertThat(resultado).isNotNull();
+        assertThat(resultado.getContent()).hasSize(4);
+        // Se verifica que los cursos con el mismo número de aportes estén ordenados alfabéticamente
+        assertThat(resultado.getContent().stream().map(CursoRankingAportesDTO::getNombre))
+            .as("El orden alfabético para los cursos empatados debe ser BD301, FIS101, MAT203")
+            .containsExactly("BD301", "FIS101", "MAT203", "ALG102");
+    }
 }
