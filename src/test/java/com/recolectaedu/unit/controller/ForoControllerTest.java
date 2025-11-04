@@ -21,6 +21,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.security.test.context.support.WithMockUser;
 
 import java.util.List;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -47,16 +48,7 @@ public class ForoControllerTest {
     @MockBean
     private UserDetailsService userDetailsService;
 
-    private UserDetails mockUserDetails;
 
-    @BeforeEach
-    void setUp() {
-        mockUserDetails = new User(
-                "test@usuario.com",
-                "password",
-                List.of(new SimpleGrantedAuthority("ROLE_FREE"))
-        );
-    }
 
 
     /*
@@ -90,18 +82,14 @@ public class ForoControllerTest {
     */
 
     @Test
+    @WithMockUser
     @DisplayName("F - Debe devolver 400 si está autenticado pero el título es corto")
     void crearTema_whenAuthAndTituloCorto_shouldReturn400BadRequest() throws Exception {
         // GIVEN
-        String fakeToken = "fake-jwt-token";
-        given(jwtUtil.validateToken(fakeToken)).willReturn(true);
-        given(jwtUtil.getEmailFromToken(fakeToken)).willReturn("test@usuario.com");
-        given(userDetailsService.loadUserByUsername("test@usuario.com")).willReturn(mockUserDetails);
         ForoRequestDTO requestInvalido = new ForoRequestDTO("Corto", "Contenido válido de más de 20 caracteres");
 
         // WHEN
         mockMvc.perform(post("/foros")
-                        .header("Authorization", "Bearer " + fakeToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestInvalido)))
                 .andExpect(status().isBadRequest())
@@ -135,18 +123,14 @@ public class ForoControllerTest {
            y que el servicio NUNCA fue llamado.
     */
     @Test
+    @WithMockUser
     @DisplayName("F - Debe devolver 400 si está autenticado pero el contenido es corto")
     void crearTema_whenAuthAndContenidoCorto_shouldReturn400BadRequest() throws Exception {
         // GIVEN
-        String fakeToken = "fake-jwt-token";
-        given(jwtUtil.validateToken(fakeToken)).willReturn(true);
-        given(jwtUtil.getEmailFromToken(fakeToken)).willReturn("test@usuario.com");
-        given(userDetailsService.loadUserByUsername("test@usuario.com")).willReturn(mockUserDetails);
         ForoRequestDTO requestInvalido = new ForoRequestDTO("Este es un título válido", "Corto"); //
 
         // WHEN
         mockMvc.perform(post("/foros")
-                        .header("Authorization", "Bearer " + fakeToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestInvalido)))
                 .andExpect(status().isBadRequest())
@@ -181,18 +165,14 @@ public class ForoControllerTest {
            y que el servicio NUNCA fue llamado.
     */
     @Test
+    @WithMockUser
     @DisplayName("F - Debe devolver 400 si está autenticado pero el título es nulo")
     void crearTema_whenAuthAndTituloNull_shouldReturn400BadRequest() throws Exception {
         // GIVEN
-        String fakeToken = "fake-jwt-token";
-        given(jwtUtil.validateToken(fakeToken)).willReturn(true);
-        given(jwtUtil.getEmailFromToken(fakeToken)).willReturn("test@usuario.com");
-        given(userDetailsService.loadUserByUsername("test@usuario.com")).willReturn(mockUserDetails);
         ForoRequestDTO requestInvalido = new ForoRequestDTO(null, "Contenido válido de más de 20 caracteres"); //
 
         // WHEN
         mockMvc.perform(post("/foros")
-                        .header("Authorization", "Bearer " + fakeToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestInvalido)))
                 .andExpect(status().isBadRequest())
@@ -226,18 +206,14 @@ public class ForoControllerTest {
            y que el servicio NUNCA fue llamado.
     */
     @Test
+    @WithMockUser
     @DisplayName("F - Debe devolver 400 si está autenticado pero el contenido es nulo")
     void crearTema_whenAuthAndContenidoNull_shouldReturn400BadRequest() throws Exception {
         // GIVEN
-        String fakeToken = "fake-jwt-token";
-        given(jwtUtil.validateToken(fakeToken)).willReturn(true);
-        given(jwtUtil.getEmailFromToken(fakeToken)).willReturn("test@usuario.com");
-        given(userDetailsService.loadUserByUsername("test@usuario.com")).willReturn(mockUserDetails);
         ForoRequestDTO requestInvalido = new ForoRequestDTO("Este es un título válido (10+)", null); //
 
         // WHEN
         mockMvc.perform(post("/foros")
-                        .header("Authorization", "Bearer " + fakeToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestInvalido)))
                 .andExpect(status().isBadRequest())
