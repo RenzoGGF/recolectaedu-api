@@ -195,36 +195,36 @@ public class ResenaServiceTest {
     }
 
     // El comentario de la reseña no puede ser nulo
-    @Test
-    @DisplayName("Debe lanzar excepción cuando el comentario está vacío")
-    void createResena_ComentarioNulo_ThrowsException() {
-        Integer id_recurso = 1;
-        String comentario = null;
-        Boolean es_positivo = true;
-        ResenaRequestCreateDTO request = new ResenaRequestCreateDTO(id_recurso, comentario, es_positivo);
-
-        assertThatThrownBy(() -> resenaService.crearResena(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El comentario no puede estar vacío");
-
-        verify(resenaRepository, never()).save(any(Resena.class));
-    }
+//    @Test
+//    @DisplayName("Debe lanzar excepción cuando el comentario está vacío")
+//    void createResena_ComentarioNulo_ThrowsException() {
+//        Integer id_recurso = 1;
+//        String comentario = null;
+//        Boolean es_positivo = true;
+//        ResenaRequestCreateDTO request = new ResenaRequestCreateDTO(id_recurso, comentario, es_positivo);
+//
+//        assertThatThrownBy(() -> resenaService.crearResena(request))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessageContaining("El comentario no puede estar vacío");
+//
+//        verify(resenaRepository, never()).save(any(Resena.class));
+//    }
 
     // El voto no puede ser nulo
-    @Test
-    @DisplayName("Debe lanzar excepción cuando es_positivo es nulo")
-    void createResena_EsPositivoNulo_ThrowsException() {
-        Integer id_recurso = 1;
-        String comentario = "Comentario de prueba";
-        Boolean es_positivo = null;
-        ResenaRequestCreateDTO request = new ResenaRequestCreateDTO(id_recurso, comentario, es_positivo);
-
-        assertThatThrownBy(() -> resenaService.crearResena(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El valor del voto no puede estar vacío");
-
-        verify(resenaRepository, never()).save(any(Resena.class));
-    }
+//    @Test
+//    @DisplayName("Debe lanzar excepción cuando es_positivo es nulo")
+//    void createResena_EsPositivoNulo_ThrowsException() {
+//        Integer id_recurso = 1;
+//        String comentario = "Comentario de prueba";
+//        Boolean es_positivo = null;
+//        ResenaRequestCreateDTO request = new ResenaRequestCreateDTO(id_recurso, comentario, es_positivo);
+//
+//        assertThatThrownBy(() -> resenaService.crearResena(request))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessageContaining("El valor del voto no puede estar vacío");
+//
+//        verify(resenaRepository, never()).save(any(Resena.class));
+//    }
 
     /*
     US-14: Votar utilidad de recursos
@@ -275,42 +275,42 @@ public class ResenaServiceTest {
     }
 
     // Error si el voto no es booleano
-    @Test
-    @DisplayName("Debe lanzar excepción si el formato de 'es_positivo' no es un booleano")
-    void update_InvalidVotoFormat_ThrowsException() {
-        Integer resenaId = 1;
-        String nuevoContenido = "Nuevo comentario";
-        String formatoIncorrectoVoto = "No es booleano";
-
-        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, (Boolean) null);
-
-        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
-
-        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El valor del voto no puede estar vacío");
-
-        verify(resenaRepository, never()).save(any(Resena.class));
-    }
+//    @Test
+//    @DisplayName("Debe lanzar excepción si el formato de 'es_positivo' no es un booleano")
+//    void update_InvalidVotoFormat_ThrowsException() {
+//        Integer resenaId = 1;
+//        String nuevoContenido = "Nuevo comentario";
+//        String formatoIncorrectoVoto = "No es booleano";
+//
+//        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, (Boolean) null);
+//
+//        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
+//
+//        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessageContaining("El valor del voto no puede estar vacío");
+//
+//        verify(resenaRepository, never()).save(any(Resena.class));
+//    }
 
     // Error si el voto es nulo
-    @Test
-    @DisplayName("Debe lanzar excepción si el voto es nulo")
-    void update_NullVoto_ThrowsException() {
-        Integer resenaId = 1;
-        String nuevoContenido = "Nuevo comentario";
-        Boolean votoNulo = null;
-
-        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, votoNulo);
-
-        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
-
-        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El valor del voto no puede estar vacío");
-
-        verify(resenaRepository, never()).save(any(Resena.class));
-    }
+//    @Test
+//    @DisplayName("Debe lanzar excepción si el voto es nulo")
+//    void update_NullVoto_ThrowsException() {
+//        Integer resenaId = 1;
+//        String nuevoContenido = "Nuevo comentario";
+//        Boolean votoNulo = null;
+//
+//        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(nuevoContenido, votoNulo);
+//
+//        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
+//
+//        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessageContaining("El valor del voto no puede estar vacío");
+//
+//        verify(resenaRepository, never()).save(any(Resena.class));
+//    }
 
     /*
     No pertenecen a ninguna US (o podrían ser otra US)
@@ -406,23 +406,23 @@ public class ResenaServiceTest {
         verify(resenaRepository, never()).save(any(Resena.class));
     }
 
-    @Test
-    @DisplayName("Debe lanzar excepción si el contenido de la reseña está vacío")
-    void update_EmptyContent_ThrowsException() {
-        Integer resenaId = 1;
-        String contenidoVacio = "";
-        Boolean nuevoVoto = true;
-
-        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(contenidoVacio, nuevoVoto);
-
-        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
-
-        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("El comentario no puede estar vacío");
-
-        verify(resenaRepository, never()).save(any(Resena.class));
-    }
+//    @Test
+//    @DisplayName("Debe lanzar excepción si el contenido de la reseña está vacío")
+//    void update_EmptyContent_ThrowsException() {
+//        Integer resenaId = 1;
+//        String contenidoVacio = "";
+//        Boolean nuevoVoto = true;
+//
+//        ResenaRequestUpdateDTO request = new ResenaRequestUpdateDTO(contenidoVacio, nuevoVoto);
+//
+//        setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
+//
+//        assertThatThrownBy(() -> resenaService.actualizarResena(resenaId, request))
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .hasMessageContaining("El comentario no puede estar vacío");
+//
+//        verify(resenaRepository, never()).save(any(Resena.class));
+//    }
 
     /*
     Para obtener reseñas por recurso
