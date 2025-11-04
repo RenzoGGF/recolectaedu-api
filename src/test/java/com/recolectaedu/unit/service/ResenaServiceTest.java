@@ -33,6 +33,7 @@ import java.util.Optional;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -111,10 +112,6 @@ public class ResenaServiceTest {
 
     private void setUpAuthenication(String email, Usuario usuario) {
         SecurityContextHolder.setContext(securityContext);
-//        when(securityContext.getAuthentication()).thenReturn(authentication);
-//        when(authentication.getName()).thenReturn(email);
-//        when(usuarioRepository.findByEmail(email)).thenReturn(Optional.of(usuario));
-        // ?
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(usuario);
     }
 
@@ -128,7 +125,8 @@ public class ResenaServiceTest {
         ResenaRequestCreateDTO request = new ResenaRequestCreateDTO(recurso_id, comentario, es_positivo);
 
         setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
-        when(recursoRepository.findById(recurso_id)).thenReturn(Optional.of(mockRecurso));
+        given(recursoRepository.findById(recurso_id)).willReturn(Optional.of(mockRecurso));
+//        when(recursoRepository.findById(recurso_id)).thenReturn(Optional.of(mockRecurso));
         when(resenaRepository.existsByUsuarioAndRecurso(mockUsuario, mockRecurso)).thenReturn(false);
 
         Resena resenaGuardada = createResenaMock(1, comentario, es_positivo, mockUsuario, mockRecurso);
