@@ -1,4 +1,4 @@
-package com.recolectaedu.service;
+package com.recolectaedu.unit.service;
 
 import com.recolectaedu.dto.response.BibliotecaResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
@@ -6,6 +6,8 @@ import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Biblioteca;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.BibliotecaRepository;
+import com.recolectaedu.service.BibliotecaService;
+import com.recolectaedu.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
