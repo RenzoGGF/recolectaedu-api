@@ -1371,4 +1371,18 @@ public class RecursoServiceTest {
         verify(cursoRepository).findById(cursoId);
         verify(recursoRepository, never()).findMasValoradosPorCursoConMetricas(any());
     }
+
+    @Test
+    @DisplayName("obtenerRecursosMasValoradosPorCurso: retorna lista vacía si el curso existe pero no tiene recursos")
+    void obtenerMasValorados_CursoExisteSinRecursos_retornaVacio() {
+        Integer cursoId = 2;
+        when(cursoRepository.findById(cursoId)).thenReturn(Optional.of(new Curso()));
+        when(recursoRepository.findMasValoradosPorCursoConMetricas(cursoId)).thenReturn(List.of());
+
+        List<RecursoValoradoResponseDTO> result = recursoService.obtenerRecursosMasValoradosPorCurso(cursoId);
+
+        assertThat(result).isNotNull().isEmpty();
+        verify(cursoRepository).findById(cursoId);
+        verify(recursoRepository).findMasValoradosPorCursoConMetricas(cursoId);
+    }
 }
