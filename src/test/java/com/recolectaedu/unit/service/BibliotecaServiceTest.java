@@ -40,16 +40,12 @@ class BibliotecaServiceTest {
     }
 
     @Test
-    void testCrearBiblioteca_Success() {
+    void crearBiblioteca_Success() {
         // Arrange
         setupAuthentication();
         when(bibliotecaRepository.findByUsuario(mockUsuario)).thenReturn(Optional.empty());
 
-        Biblioteca savedBiblioteca = Biblioteca.builder()
-                .id_biblioteca(1)
-                .usuario(mockUsuario)
-                .nombre("Mi biblioteca")
-                .build();
+        Biblioteca savedBiblioteca = createBibliotecaMock(1, mockUsuario);
         when(bibliotecaRepository.save(any(Biblioteca.class))).thenReturn(savedBiblioteca);
 
         // Act
@@ -67,14 +63,10 @@ class BibliotecaServiceTest {
     }
 
     @Test
-    void testCrearBiblioteca_Failure_UserAlreadyHasBiblioteca() {
+    void crearBiblioteca_Duplicated_ThrowsException() {
         // Arrange
         setupAuthentication();
-        Biblioteca existingBiblioteca = Biblioteca.builder()
-                .id_biblioteca(1)
-                .usuario(mockUsuario)
-                .nombre("Mi biblioteca")
-                .build();
+        Biblioteca existingBiblioteca = createBibliotecaMock(1, mockUsuario);
         when(bibliotecaRepository.findByUsuario(mockUsuario)).thenReturn(Optional.of(existingBiblioteca));
 
         // Act & Assert
@@ -87,14 +79,10 @@ class BibliotecaServiceTest {
     }
 
     @Test
-    void testObtenerBibliotecaDeUsuario_Success() {
+    void obtenerBibliotecaDeUsuario_Success() {
         // Arrange
         setupAuthentication();
-        Biblioteca biblioteca = Biblioteca.builder()
-                .id_biblioteca(1)
-                .usuario(mockUsuario)
-                .nombre("Mi biblioteca")
-                .build();
+        Biblioteca biblioteca = createBibliotecaMock(1, mockUsuario);
         when(bibliotecaRepository.findByUsuario(mockUsuario)).thenReturn(Optional.of(biblioteca));
 
         // Act
@@ -111,7 +99,7 @@ class BibliotecaServiceTest {
     }
 
     @Test
-    void testObtenerBibliotecaDeUsuario_Failure_NotFound() {
+    void obtenerBibliotecaDeUsuario_NotFound_ThrowsException() {
         // Arrange
         setupAuthentication();
         when(bibliotecaRepository.findByUsuario(mockUsuario)).thenReturn(Optional.empty());
@@ -122,6 +110,14 @@ class BibliotecaServiceTest {
         assertEquals("Biblioteca no encontrada", exception.getMessage());
         verify(usuarioService).getAuthenticatedUsuario();
         verify(bibliotecaRepository).findByUsuario(mockUsuario);
+    }
+
+    private Biblioteca createBibliotecaMock(Integer id_biblioteca, Usuario usuario) {
+        return Biblioteca.builder()
+                .id_biblioteca(1)
+                .usuario(usuario)
+                .nombre("Mi biblioteca")
+                .build();
     }
 
     private Usuario createUsuarioMock(Integer id, String email) {

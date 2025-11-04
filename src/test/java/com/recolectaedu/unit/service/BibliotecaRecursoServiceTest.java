@@ -1,4 +1,4 @@
-package com.recolectaedu.service;
+package com.recolectaedu.unit.service;
 
 import com.recolectaedu.dto.request.BibliotecaRecursoRequestDTO;
 import com.recolectaedu.dto.response.BibliotecaRecursoResponseDTO;
@@ -11,6 +11,8 @@ import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.BibliotecaRecursoRepository;
 import com.recolectaedu.repository.BibliotecaRepository;
 import com.recolectaedu.repository.RecursoRepository;
+import com.recolectaedu.service.BibliotecaRecursoService;
+import com.recolectaedu.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
