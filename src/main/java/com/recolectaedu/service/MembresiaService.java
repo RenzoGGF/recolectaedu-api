@@ -13,6 +13,7 @@ import com.recolectaedu.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.*;
 import java.util.HashSet;
@@ -25,14 +26,16 @@ public class MembresiaService {
 
     private final UsuarioRepository usuarioRepository;
     private final MembresiaRepository membresiaRepository;
+    private final UsuarioService usuarioService;
 
     @Transactional
     public MembresiaResponseDTO create(Integer idUsuario, MembresiaRequestDTO req) {
         Usuario user = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
+        validarPropietarioOAdmin(user);
+
         // no más de una membresia ACTIVE vigente por plan
-        // MembresiaService.create(...)
         if (membresiaRepository.hasAnyActiveNow(idUsuario, Instant.now())) {
             throw new BusinessRuleException("Ya existe una membresía activa vigente para este usuario");
         }
@@ -64,6 +67,14 @@ public class MembresiaService {
 
     @Transactional
     public MembresiaResponseDTO cancelActive(Integer idUsuario) {
+        // 1) Obtener usuario objetivo
+        Usuario user = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        // 2) Validar que el autenticado sea el mismo (o ADMIN)
+        validarPropietarioOAdmin(user);
+
+        // 3) Buscar membresías activas vigentes
         var actives = membresiaRepository.findAllActiveNowOrderByStartsDesc(idUsuario, Instant.now());
         if (actives.isEmpty()) {
             throw new BusinessRuleException("El usuario no tiene una membresía activa vigente");
@@ -71,15 +82,17 @@ public class MembresiaService {
 
         var m = actives.getFirst();
 
-        // desactivar autoRenew, cerrar vigencia y marcar estado
+        // 4) Cancelar la membresía
         m.setAutoRenew(false);
         m.setEndsAt(Instant.now());
         m.setStatus(MembresiaStatus.CANCELED);
         m = membresiaRepository.save(m);
 
-        // Sincroniza rolTipo del usuario (pasar a FREE)
+        syncUserRole(user);
+
         return toDTO(m);
     }
+
 
     @Transactional
     public int expireOverdue() {
@@ -105,15 +118,17 @@ public class MembresiaService {
 
     @Transactional(readOnly = true)
     public List<MembresiaResponseDTO> list(Integer idUsuario) {
-        // asegura que el usuario existe
-        usuarioRepository.findById(idUsuario)
+        var user = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        validarPropietarioOAdmin(user);
 
         return membresiaRepository.findAllByUsuarioOrderByStartsDesc(idUsuario)
                 .stream()
                 .map(this::toDTO)
                 .toList();
     }
+
 
     // Helpers
     private MembresiaResponseDTO toDTO(Membresia m) {
@@ -135,4 +150,17 @@ public class MembresiaService {
             usuarioRepository.save(user); // persiste el cambio de rolTipo
         }
     }
+
+    // helper validador propietario o admin
+    private void validarPropietarioOAdmin(Usuario objetivo) {
+        Usuario auth = usuarioService.getAuthenticatedUsuario();
+
+        if (auth.getRolTipo() == RolTipo.ROLE_ADMIN) {
+            return;
+        }
+        if (!auth.getId_usuario().equals(objetivo.getId_usuario())) {
+            throw new AccessDeniedException("No puedes operar sobre membresías de otro usuario");
+        }
+    }
+
 }
