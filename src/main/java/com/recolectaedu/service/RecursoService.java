@@ -2,8 +2,10 @@ package com.recolectaedu.service;
 
 import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
+import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
+import com.recolectaedu.dto.response.AporteConContadoresResponseDTO;
 import com.recolectaedu.dto.response.AporteListadoResponseDTO;
 import com.recolectaedu.dto.response.RecursoResponseDTO;
 import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
@@ -16,6 +18,7 @@ import com.recolectaedu.model.enums.Periodo;
 import com.recolectaedu.model.enums.Tipo_recurso;
 import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
+import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -24,6 +27,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import com.recolectaedu.dto.response.RecursoResponse2DTO;
+
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -38,6 +43,8 @@ public class RecursoService {
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
     private final IAlmacenamientoService almacenamientoService;
+    private final ResenaRepository resenaRepository;
+    private final UsuarioService usuarioService;
 
     private RecursoResponseDTO toDto(Recurso r) {
         RecursoResponseDTO dto = new RecursoResponseDTO();
@@ -58,6 +65,26 @@ public class RecursoService {
         return dto;
     }
 
+    private RecursoResponse2DTO mapToRecursoResponse2DTO(Recurso recurso) {
+        String autorNombre = "Anónimo";
+        if (recurso.getUsuario() != null && recurso.getUsuario().getPerfil() != null) {
+            autorNombre = recurso.getUsuario().getPerfil().getNombre();
+        }
+
+        return new RecursoResponse2DTO(
+                recurso.getId_recurso(),
+                recurso.getTitulo(),
+                recurso.getDescripcion(),
+                recurso.getContenido(),
+                recurso.getFormato(),
+                recurso.getTipo(),
+                recurso.getCreado_el(),
+                recurso.getUsuario() != null ? recurso.getUsuario().getId_usuario() : null,
+                recurso.getCurso() != null ? recurso.getCurso().getId_curso() : null,
+                autorNombre
+        );
+    }
+
     private Periodo mapPeriodoOrdinal(Integer ordinal) {
         if (ordinal == null) return null;
         var valores = Periodo.values();
@@ -74,44 +101,56 @@ public class RecursoService {
     }
 
     // US-12
-    public List<RecursoResponseDTO> findRecientesByCurso(Integer cursoId) {
+    public List<RecursoResponse2DTO> findRecientesByCurso(Integer cursoId) {
         if (!cursoRepository.existsById(cursoId)) {
             throw new ResourceNotFoundException("El curso con ID " + cursoId + " no fue encontrado.");
         }
 
         List<Recurso> recursos = recursoRepository.findRecursosRecientesPorCurso(cursoId);
 
-        return getRecursoResponseDTOS(recursos);
+        return recursos.stream()
+                .map(this::mapToRecursoResponse2DTO)
+                .collect(Collectors.toList());
     }
 
     // US - 9 y 10
-    public List<RecursoResponseDTO> searchRecursos(String keyword, Integer cursoId, String tipo, String autor, String universidad, Integer calificacionMinima, String ordenarPor) {
+    public List<RecursoResponse2DTO> searchRecursos(String keyword, Integer cursoId, String tipo, String autor, String universidad, Integer calificacionMinima, OrdenRecurso ordenarPor) {
         Tipo_recurso tipoEnum = null;
-        if (tipo != null && !tipo.isEmpty()) {
-            try {
-                tipoEnum = Tipo_recurso.valueOf(tipo);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Tipo de recurso inválido: " + tipo);
-            }
+        if (tipo != null && !tipo.trim().isEmpty()) {
+            final String tipoBusqueda = tipo;
+            tipoEnum = Arrays.stream(Tipo_recurso.values())
+                    .filter(tr -> tr.name().equalsIgnoreCase(tipoBusqueda))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalArgumentException("El tipo de recurso '" + tipoBusqueda + "' no es válido."));
         }
-
-        Sort sort = Sort.by(Sort.Direction.DESC, "creado_el");
-
-        if ("titulo".equalsIgnoreCase(ordenarPor)) {
-            sort = Sort.by(Sort.Direction.ASC, "titulo");
-        }
-
-        List<Recurso> recursos = recursoRepository.search(
+        List<Object[]> resultados = recursoRepository.search(
                 keyword,
                 cursoId,
                 tipoEnum,
                 autor,
                 universidad,
                 calificacionMinima,
-                sort
+                Sort.unsorted()
         );
-
-        return getRecursoResponseDTOS(recursos);
+        if (ordenarPor == OrdenRecurso.RELEVANTES) {
+            resultados.sort((o1, o2) -> {
+                try {
+                    Long score1 = ((Number) o1[1]).longValue();
+                    Long score2 = ((Number) o2[1]).longValue();
+                    return Long.compare(score2, score1);
+                } catch (Exception e) {
+                    return 0;
+                }
+            });
+        } else {
+            resultados.sort((o1, o2) -> ((Recurso) o2[0]).getCreado_el().compareTo(((Recurso) o1[0]).getCreado_el()));
+        }
+        return resultados.stream()
+                .map(resultado -> {
+                    Recurso recurso = (Recurso) resultado[0];
+                    return mapToRecursoResponse2DTO(recurso);
+                })
+                .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
@@ -181,6 +220,9 @@ public class RecursoService {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+        validateOwnership(recurso, usuarioActual);
+
         Curso curso = validarYObtenerCurso(request.universidad(), request.carrera(), request.nombreCurso());
 
         recurso.setTitulo(request.titulo());
@@ -200,6 +242,9 @@ public class RecursoService {
     public RecursoResponseDTO actualizarParcial(Integer id_recurso, RecursoPartialUpdateRequestDTO request) {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+        validateOwnership(recurso, usuarioActual);
 
         // Si se quiere actualizar la clasificación, se deben proporcionar los tres campos.
         if (request.universidad() != null && request.carrera() != null && request.nombreCurso() != null) {
@@ -223,6 +268,10 @@ public class RecursoService {
     public void eliminar(Integer id_recurso) {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+        validateOwnership(recurso, usuarioActual);
+
         // Opcional: eliminar el archivo físico si el recurso es de tipo archivo
         if (recurso.getFormato() == com.recolectaedu.model.enums.FormatoRecurso.ARCHIVO) {
             almacenamientoService.eliminar(recurso.getContenido());
@@ -232,7 +281,7 @@ public class RecursoService {
 
     // US-08: Historial de aportes del usuario autenticado
     @Transactional(readOnly = true)
-    public Page<AporteListadoResponseDTO> listarMisAportes(
+    public Page<AporteConContadoresResponseDTO> listarMisAportes(
             Integer usuarioId,
             Integer cursoId,
             String tipo,
@@ -251,12 +300,31 @@ public class RecursoService {
                     .orElseThrow(() -> new IllegalArgumentException("El tipo de recurso '" + tipoBusqueda + "' no es válido."));
         }
 
-        return recursoRepository.findAportesByUsuario(
+        Page<AporteListadoResponseDTO> aportes = recursoRepository.findAportesByUsuario(
                 usuarioId,
                 cursoId,
                 tipoEnum,
                 pageable
         );
+
+        return aportes.map(aporte -> {
+            int votosPositivos = (int) resenaRepository.countByRecurso_Id_recursoAndEsPositivo(aporte.getId(), true);
+            int votosNegativos = (int) resenaRepository.countByRecurso_Id_recursoAndEsPositivo(aporte.getId(), false);
+            // int comentarios = (int) comentarioRepository.countByRecursoId(aporte.getId()); // Not possible yet
+            return new AporteConContadoresResponseDTO(
+                    aporte.getId(),
+                    aporte.getTitulo(),
+                    aporte.getTipo(),
+                    aporte.getCursoId(),
+                    aporte.getCursoNombre(),
+                    aporte.getUniversidad(),
+                    aporte.getFechaCreacion(),
+                    aporte.getFechaActualizacion(),
+                    votosPositivos,
+                    votosNegativos,
+                    0 // Hardcoded to 0
+            );
+        });
     }
 
     @Transactional(readOnly = true)
@@ -264,5 +332,11 @@ public class RecursoService {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
         return toDto(recurso);
+    }
+
+    private void validateOwnership(Recurso recurso, Usuario auth) {
+        if (auth == null || recurso.getUsuario() == null || !recurso.getUsuario().getId_usuario().equals(auth.getId_usuario())) {
+            throw new BusinessRuleException("No tienes permiso para operar sobre este recurso");
+        }
     }
 }

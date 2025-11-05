@@ -1,6 +1,7 @@
 package com.recolectaedu.controller;
 
 import com.recolectaedu.dto.request.ResenaRequestCreateDTO;
+import com.recolectaedu.dto.request.ResenaRequestPartialUpdateDTO;
 import com.recolectaedu.dto.request.ResenaRequestUpdateDTO;
 import com.recolectaedu.dto.response.ResenaResponseDTO;
 import com.recolectaedu.service.ResenaService;
@@ -10,7 +11,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @RequestMapping("/resenas")
@@ -18,27 +18,6 @@ import java.util.List;
 public class ResenaController {
 
     private final ResenaService resenaService;
-
-    @GetMapping("/{id_resena}")
-    public ResponseEntity<ResenaResponseDTO> obtenerResena(
-            @PathVariable Integer id_resena
-    ){
-        return ResponseEntity.ok(resenaService.obtenerResena(id_resena));
-    }
-
-    @GetMapping("/recurso/{id_recurso}")
-    public ResponseEntity<List<ResenaResponseDTO>> listarPorRecurso(
-            @PathVariable Integer id_recurso
-    ) {
-        return ResponseEntity.ok(resenaService.listarPorRecurso(id_recurso));
-    }
-
-    @GetMapping("/usuario/{id_usuario}")
-    public ResponseEntity<List<ResenaResponseDTO>> listarPorUsuario(
-            @PathVariable Integer id_usuario
-    ) {
-        return ResponseEntity.ok(resenaService.listarPorUsuario(id_usuario));
-    }
 
     @PostMapping
     public ResponseEntity<ResenaResponseDTO> crearResena(
@@ -55,6 +34,15 @@ public class ResenaController {
     ) {
         return ResponseEntity.ok(resenaService.actualizarResena(id_resena, request));
     }
+
+    @PatchMapping("/{id_resena}")
+    public ResponseEntity<ResenaResponseDTO> actualizarParcialResena(
+            @PathVariable Integer id_resena,
+            @Valid @RequestBody ResenaRequestPartialUpdateDTO request
+    ) {
+        return ResponseEntity.ok(resenaService.actualizarParcialResena(id_resena, request));
+    }
+
 
     @DeleteMapping("/{id_resena}")
     public ResponseEntity<Void> eliminarResena(

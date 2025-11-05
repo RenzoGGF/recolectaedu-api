@@ -2,6 +2,7 @@ package com.recolectaedu.controller;
 
 import com.recolectaedu.dto.request.PerfilRequestDTO;
 import com.recolectaedu.dto.request.UserRequestDTO;
+import com.recolectaedu.dto.response.AporteConContadoresResponseDTO;
 import com.recolectaedu.dto.response.AporteListadoResponseDTO;
 import com.recolectaedu.dto.response.RespuestaPagina;
 import com.recolectaedu.dto.response.UserResponseDTO;
@@ -27,11 +28,11 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final RecursoService recursoService;
 
-    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO req) {
-        var resp = usuarioService.registrarUsuario(req);
-        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
-    }
+//    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+//    public ResponseEntity<UserResponseDTO> register(@Valid @RequestBody UserRequestDTO req) {
+//        var resp = usuarioService.registrarUsuario(req);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
+//    }
 
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponseDTO> getById(@PathVariable Integer id) {
@@ -39,7 +40,7 @@ public class UsuarioController {
         return ResponseEntity.ok(resp);
     }
 
-    @PutMapping(value = "/{id}/profile", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{id}/perfil", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponseDTO> upsertProfile(
             @PathVariable Integer id,
             @Valid @RequestBody PerfilRequestDTO body) {
@@ -62,7 +63,7 @@ public class UsuarioController {
 
     // US-08: Historial de aportes de un usuario
     @GetMapping("/{usuarioId}/aportes")
-    public ResponseEntity<RespuestaPagina<AporteListadoResponseDTO>> getAportesPorUsuario(
+    public ResponseEntity<RespuestaPagina<AporteConContadoresResponseDTO>> getAportesPorUsuario(
             @PathVariable Integer usuarioId,
             @RequestParam(required = false) Integer cursoId,
             @RequestParam(required = false) String tipo,
@@ -73,14 +74,14 @@ public class UsuarioController {
         Sort.Direction direction = sort[1].equalsIgnoreCase("asc") ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sort[0]));
 
-        Page<AporteListadoResponseDTO> aportesPage = recursoService.listarMisAportes(
+        Page<AporteConContadoresResponseDTO> aportesPage = recursoService.listarMisAportes(
                 usuarioId,
                 cursoId,
                 tipo,
                 pageable
         );
 
-        RespuestaPagina<AporteListadoResponseDTO> respuesta = new RespuestaPagina<>(
+        RespuestaPagina<AporteConContadoresResponseDTO> respuesta = new RespuestaPagina<>(
                 aportesPage.getContent(),
                 aportesPage.getNumber(),
                 aportesPage.getSize(),

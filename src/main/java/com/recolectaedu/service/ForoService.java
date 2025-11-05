@@ -16,19 +16,15 @@ public class ForoService {
 
     private final ForoRepository foroRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
 
     public ForoResponseDTO crearTema(ForoRequestDTO foroRequest){
-
-        Usuario usuario = usuarioRepository.findById(foroRequest.getId_usuario())
-                .orElseThrow(() -> new ResourceNotFoundException("No se encontró el usuario con ID: " + foroRequest.getId_usuario()));
-
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario(); //
         Foro nuevoForo = new Foro();
-        nuevoForo.setTitulo(foroRequest.getTitulo());
-        nuevoForo.setContenido(foroRequest.getContenido());
-        nuevoForo.setUsuario(usuario);
-
+        nuevoForo.setTitulo(foroRequest.titulo());
+        nuevoForo.setContenido(foroRequest.contenido());
+        nuevoForo.setUsuario(usuarioActual);
         Foro foroGuardado = foroRepository.save(nuevoForo);
-
         return new ForoResponseDTO(
                 foroGuardado.getId_foro(),
                 foroGuardado.getTitulo(),

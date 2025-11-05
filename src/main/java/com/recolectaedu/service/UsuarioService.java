@@ -9,9 +9,13 @@ import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Usuario;
-import com.recolectaedu.model.enums.Rol;
+import com.recolectaedu.model.enums.RolTipo;
 import com.recolectaedu.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,7 +42,7 @@ public class UsuarioService {
         Usuario u = Usuario.builder()
                 .email(r.getEmail())
                 .password_hash(passwordEncoder.encode(r.getPassword()))
-                .rol(resolveRol(r.getRol()))
+                .rolTipo(resolveRol(r.getRol()))
                 .build();
 
         if (r.getPerfil() != null) {
@@ -62,6 +66,9 @@ public class UsuarioService {
     public UserResponseDTO obtenerUsuarioPorIdDTO(Integer id) {
         var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        validarPropietarioOAdmin(user);
+
         return toDTO(user);
     }
 
@@ -70,6 +77,8 @@ public class UsuarioService {
     public UserResponseDTO actualizarPerfilDTO(Integer id, PerfilRequestDTO dto) {
         var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        validarPropietarioOAdmin(user);
 
         var perfil = user.getPerfil();
         if (perfil == null) {
@@ -92,17 +101,20 @@ public class UsuarioService {
     public void eliminarUsuario(Integer id) {
         var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        validarPropietarioOAdmin(user);
+
         usuarioRepository.delete(user); // orphanRemoval=true elimina también el Perfil
     }
 
     // Helpers
 
-    private Rol resolveRol(String raw) {
-        if (raw == null || raw.isBlank()) return Rol.FREE; // default
+    private RolTipo resolveRol(String raw) {
+        if (raw == null || raw.isBlank()) return RolTipo.ROLE_FREE; // default
         try {
-            return Rol.valueOf(raw.trim().toUpperCase()); // FREE, PREMIUM, ADMIN
+            return RolTipo.valueOf(raw.trim().toUpperCase()); // FREE, PREMIUM, ADMIN
         } catch (IllegalArgumentException ex) {
-            throw new BusinessRuleException("Rol inválido. Permitidos: FREE, PREMIUM, ADMIN.");
+            throw new BusinessRuleException("RolTipo inválido. Permitidos: FREE, PREMIUM, ADMIN.");
         }
     }
       
@@ -135,7 +147,7 @@ public class UsuarioService {
         return new UserResponseDTO(
                 u.getId_usuario(),
                 u.getEmail(),
-                u.getRol().name(), // "FREE"/"PREMIUM"/"ADMIN"
+                u.getRolTipo().name(), // "FREE"/"PREMIUM"/"ADMIN"
                 u.getPerfil() == null ? null :
                         new PerfilResponseDTO(
                                 u.getPerfil().getId_usuario(),
@@ -146,5 +158,31 @@ public class UsuarioService {
                                 u.getPerfil().getCiclo()
                         )
         );
+    }
+
+    // Auth
+    // @Transactional(readOnly = true)
+    public Usuario getAuthenticatedUsuario() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated())
+            throw new AccessDeniedException("No autenticado");
+        String email = auth.getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+    }
+
+    // helper validar usuario propietario o admin
+    private void validarPropietarioOAdmin(Usuario objetivo) {
+        Usuario auth = getAuthenticatedUsuario(); // el usuario del token
+
+        // ADMIN, puede operar sobre cualquier usuario
+        if (auth.getRolTipo() == RolTipo.ROLE_ADMIN) {
+            return;
+        }
+
+        // NO ADMIN, solo puede operar sobre su propio id
+        if (!auth.getId_usuario().equals(objetivo.getId_usuario())) {
+            throw new AccessDeniedException("No puedes operar sobre otra cuenta de usuario");
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.recolectaedu.service;
 
 import com.recolectaedu.dto.request.ResenaRequestCreateDTO;
+import com.recolectaedu.dto.request.ResenaRequestPartialUpdateDTO;
 import com.recolectaedu.dto.request.ResenaRequestUpdateDTO;
 import com.recolectaedu.dto.response.ResenaResponseDTO;
 import com.recolectaedu.exception.BusinessRuleException;
@@ -24,6 +25,7 @@ public class ResenaService {
 
     private final ResenaRepository resenaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final UsuarioService usuarioService;
     private final RecursoRepository recursoRepository;
 
     private ResenaResponseDTO toDto(Resena resena) {
@@ -40,19 +42,18 @@ public class ResenaService {
 
     @Transactional
     public ResenaResponseDTO crearResena(ResenaRequestCreateDTO request) {
-        Usuario usuario = usuarioRepository.findById(request.id_usuario())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
 
         Recurso recurso = recursoRepository.findById(request.id_recurso())
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
-        if (resenaRepository.existsByUsuarioAndRecurso(usuario, recurso))
+        if (resenaRepository.existsByUsuarioAndRecurso(usuarioActual, recurso))
             throw new BusinessRuleException("El usuario ya ha dado una reseña al recurso");
 
         Resena resena = Resena.builder()
                 .contenido(request.contenido())
                 .es_positivo(request.es_positivo())
-                .usuario(usuario)
+                .usuario(usuarioActual)
                 .recurso(recurso)
                 .creado_el(LocalDateTime.now())
                 .actualizado_el(LocalDateTime.now())
@@ -71,12 +72,12 @@ public class ResenaService {
 
     @Transactional
     public ResenaResponseDTO actualizarResena(Integer id_resena, ResenaRequestUpdateDTO request) {
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+
         Resena resena = resenaRepository.findById(id_resena)
                 .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada"));
 
-        // No permite modificar contenido que no es propio del usuario
-        if (!resena.getUsuario().getId_usuario().equals(request.id_usuario()))
-            throw new BusinessRuleException("No se puede modificar la reseña de otro usuario.");
+        validateOwnership(resena, usuarioActual);
 
         resena.setContenido(request.contenido());
         resena.setEs_positivo(request.es_positivo());
@@ -86,9 +87,33 @@ public class ResenaService {
     }
 
     @Transactional
-    public void eliminar(Integer id_resena) {
+    public ResenaResponseDTO actualizarParcialResena(Integer id_resena, ResenaRequestPartialUpdateDTO request) {
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+
         Resena resena = resenaRepository.findById(id_resena)
                 .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada"));
+
+        validateOwnership(resena, usuarioActual);
+
+        if (request.contenido() != null) {
+            resena.setContenido(request.contenido());
+        }
+        if (request.es_positivo() != null) {
+            resena.setEs_positivo(request.es_positivo());
+        }
+        resena.setActualizado_el(LocalDateTime.now());
+
+        return toDto(resenaRepository.save(resena));
+    }
+
+    @Transactional
+    public void eliminar(Integer id_resena) {
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+
+        Resena resena = resenaRepository.findById(id_resena)
+                .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada"));
+
+        validateOwnership(resena, usuarioActual);
 
         resenaRepository.delete(resena);
     }
@@ -107,5 +132,11 @@ public class ResenaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
         return resenaRepository.findByUsuario(usuario).stream().map(this::toDto).toList();
+    }
+
+    private void validateOwnership(Resena resena, Usuario usuarioActual) {
+        if (!resena.getUsuario().getId_usuario().equals(usuarioActual.getId_usuario())) {
+            throw new BusinessRuleException("No tienes permiso para operar sobre esta reseña");
+        }
     }
 }
