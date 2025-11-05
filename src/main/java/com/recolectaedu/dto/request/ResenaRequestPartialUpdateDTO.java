@@ -1,15 +1,13 @@
 package com.recolectaedu.dto.request;
 
 import jakarta.annotation.Nullable;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 
 public record ResenaRequestPartialUpdateDTO(
 //        @Nullable
 //        Integer id_usuario,
         @Nullable
-        @Min(value = 5, message = "El contenido debe tener al menos 5 caracteres")
-        @Max(value = 255, message = "El contenido debe tener como máximo 255 caracteres")
+        @Size(min = 5, max = 255, message = "El contenido debe tener entre 5 y 255 caracteres")
         String contenido,
         @Nullable
         Boolean es_positivo

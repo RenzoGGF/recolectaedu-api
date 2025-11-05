@@ -17,13 +17,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/resenas")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class ResenaController {
 
     private final ResenaService resenaService;
 
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResenaResponseDTO> crearResena(
             @Valid @RequestBody ResenaRequestCreateDTO request
     ) {
@@ -32,7 +30,6 @@ public class ResenaController {
     }
 
     @PutMapping("/{id_resena}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResenaResponseDTO> actualizarResena(
             @PathVariable Integer id_resena,
             @Valid @RequestBody ResenaRequestUpdateDTO request
@@ -41,7 +38,6 @@ public class ResenaController {
     }
 
     @PatchMapping("/{id_resena}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResenaResponseDTO> actualizarParcialResena(
             @PathVariable Integer id_resena,
             @Valid @RequestBody ResenaRequestPartialUpdateDTO request
@@ -51,7 +47,6 @@ public class ResenaController {
 
 
     @DeleteMapping("/{id_resena}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> eliminarResena(
             @PathVariable Integer id_resena
     ) {
