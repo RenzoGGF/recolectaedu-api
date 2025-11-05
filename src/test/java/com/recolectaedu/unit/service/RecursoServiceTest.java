@@ -1,9 +1,9 @@
 package com.recolectaedu.unit.service;
 
-import com.recolectaedu.dto.response.AporteConContadoresResponseDTO;
-import com.recolectaedu.dto.response.AporteListadoResponseDTO;
-import com.recolectaedu.dto.response.RecursoResponse2DTO;
-import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
+import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
+import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
+import com.recolectaedu.dto.response.*;
+import com.recolectaedu.exception.BusinessRuleException;
 import com.recolectaedu.exception.ResourceNotFoundException;
 import com.recolectaedu.model.Curso;
 import com.recolectaedu.model.Perfil;
@@ -19,6 +19,7 @@ import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
 import com.recolectaedu.service.IAlmacenamientoService;
 import com.recolectaedu.service.RecursoService;
+import com.recolectaedu.service.UsuarioService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -73,6 +74,9 @@ public class RecursoServiceTest {
 
     @Mock
     private ComentarioRepository comentarioRepository;
+
+    @Mock
+    private UsuarioService usuarioService;
 
     @InjectMocks
     private RecursoService recursoService;
@@ -1392,5 +1396,190 @@ public class RecursoServiceTest {
         assertThat(result).isNotNull().isEmpty();
         verify(cursoRepository).findById(cursoId);
         verify(recursoRepository).findMasValoradosPorCursoConMetricas(cursoId);
+    }
+
+    // PUT: éxito cuando el autor coincide
+    @Test
+    @DisplayName("actualizar: éxito cuando el autor coincide")
+    void actualizar_Success_WhenOwner() {
+        Usuario autor = new Usuario(); autor.setId_usuario(1);
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
+        when(usuarioService.getAuthenticatedUsuario()).thenReturn(autor); // <- autenticado = autor
+        when(cursoRepository.findByUniversidadAndCarreraAndNombre("UNI","SIS","ALG"))
+                .thenReturn(Optional.of(new Curso()));
+        when(recursoRepository.save(any(Recurso.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecursoUpdateRequestDTO req = RecursoUpdateRequestDTO.builder()
+                .universidad("UNI").carrera("SIS").nombreCurso("ALG")
+                .titulo("T").descripcion("D").contenido("C")
+                .formato(FormatoRecurso.TEXTO)
+                .tipo(com.recolectaedu.model.enums.Tipo_recurso.Apuntes)
+                .ano(2024).periodo(1).build();
+
+        RecursoResponseDTO resp = recursoService.actualizar(100, req);
+
+        assertThat(resp).isNotNull();
+        verify(recursoRepository).findById(100);
+        verify(usuarioService).getAuthenticatedUsuario();
+        verify(cursoRepository).findByUniversidadAndCarreraAndNombre("UNI","SIS","ALG");
+        verify(recursoRepository).save(any(Recurso.class));
+    }
+
+    // PUT: ownership inválido
+    @Test
+    @DisplayName("actualizar: lanza BusinessRule si ownership inválido")
+    void actualizar_InvalidOwnership_Throws() {
+        Usuario autor = new Usuario(); autor.setId_usuario(1);
+        Usuario otro = new Usuario();  otro.setId_usuario(2);
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
+        when(usuarioService.getAuthenticatedUsuario()).thenReturn(otro);
+
+        RecursoUpdateRequestDTO req = RecursoUpdateRequestDTO.builder()
+                .universidad("UNI").carrera("SIS").nombreCurso("ALG")
+                .titulo("T").descripcion("D").contenido("C")
+                .formato(FormatoRecurso.TEXTO)
+                .tipo(com.recolectaedu.model.enums.Tipo_recurso.Apuntes)
+                .ano(2024).periodo(1).build();
+
+        assertThatThrownBy(() -> recursoService.actualizar(100, req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("No tienes permiso");
+
+        verify(recursoRepository, never()).save(any());
+    }
+
+    // PUT: no autenticado
+    @Test
+    @DisplayName("actualizar: falla si no autenticado")
+    void actualizar_Unauthenticated_Throws() {
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(
+                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(FormatoRecurso.TEXTO).build()
+        ));
+        when(usuarioService.getAuthenticatedUsuario()).thenThrow(new IllegalStateException("No autenticado"));
+
+        RecursoUpdateRequestDTO req = RecursoUpdateRequestDTO.builder()
+                .universidad("UNI").carrera("SIS").nombreCurso("ALG")
+                .titulo("T").descripcion("D").contenido("C")
+                .formato(FormatoRecurso.TEXTO)
+                .tipo(com.recolectaedu.model.enums.Tipo_recurso.Apuntes)
+                .ano(2024).periodo(1).build();
+
+        assertThatThrownBy(() -> recursoService.actualizar(100, req))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(recursoRepository, never()).save(any());
+    }
+
+    // PATCH: éxito cuando el autor coincide
+    @Test
+    @DisplayName("actualizarParcial: éxito cuando el autor coincide")
+    void actualizarParcial_Success_WhenOwner() {
+        Usuario autor = new Usuario(); autor.setId_usuario(1);
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
+        when(usuarioService.getAuthenticatedUsuario()).thenReturn(autor);
+        when(recursoRepository.save(any(Recurso.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        RecursoPartialUpdateRequestDTO req = new RecursoPartialUpdateRequestDTO(null, null, null, "Nuevo título", null, null, null, null, null, null);
+
+        RecursoResponseDTO resp = recursoService.actualizarParcial(100, req);
+
+        assertThat(resp).isNotNull();
+        verify(usuarioService).getAuthenticatedUsuario();
+        verify(recursoRepository).save(any(Recurso.class));
+    }
+
+    // PATCH: ownership inválido
+    @Test
+    @DisplayName("actualizarParcial: lanza BusinessRule si ownership inválido")
+    void actualizarParcial_InvalidOwnership_Throws() {
+        Usuario autor = new Usuario(); autor.setId_usuario(1);
+        Usuario otro = new Usuario();  otro.setId_usuario(2);
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
+        when(usuarioService.getAuthenticatedUsuario()).thenReturn(otro);
+
+        RecursoPartialUpdateRequestDTO req = new RecursoPartialUpdateRequestDTO(null, null, null, "x", null, null, null, null, null, null);
+
+        assertThatThrownBy(() -> recursoService.actualizarParcial(100, req))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("No tienes permiso");
+
+        verify(recursoRepository, never()).save(any());
+    }
+
+    // PATCH: no autenticado
+    @Test
+    @DisplayName("actualizarParcial: falla si no autenticado")
+    void actualizarParcial_Unauthenticated_Throws() {
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(
+                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(FormatoRecurso.TEXTO).build()
+        ));
+        when(usuarioService.getAuthenticatedUsuario()).thenThrow(new IllegalStateException("No autenticado"));
+
+        RecursoPartialUpdateRequestDTO req = new RecursoPartialUpdateRequestDTO(null, null, null, "x", null, null, null, null, null, null);
+
+        assertThatThrownBy(() -> recursoService.actualizarParcial(100, req))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(recursoRepository, never()).save(any());
+    }
+
+    // DELETE: éxito cuando el autor coincide
+    @Test
+    @DisplayName("eliminar: éxito cuando el autor coincide")
+    void eliminar_Success_WhenOwner() {
+        Usuario autor = new Usuario(); autor.setId_usuario(1);
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
+        when(usuarioService.getAuthenticatedUsuario()).thenReturn(autor);
+
+        recursoService.eliminar(100);
+
+        verify(recursoRepository).delete(recurso);
+    }
+
+    // DELETE: ownership inválido
+    @Test
+    @DisplayName("eliminar: lanza BusinessRule si ownership inválido")
+    void eliminar_InvalidOwnership_Throws() {
+        Usuario autor = new Usuario(); autor.setId_usuario(1);
+        Usuario otro = new Usuario();  otro.setId_usuario(2);
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
+        when(usuarioService.getAuthenticatedUsuario()).thenReturn(otro);
+
+        assertThatThrownBy(() -> recursoService.eliminar(100))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("No tienes permiso");
+
+        verify(recursoRepository, never()).delete(any());
+    }
+
+    // DELETE: no autenticado
+    @Test
+    @DisplayName("eliminar: falla si no autenticado")
+    void eliminar_Unauthenticated_Throws() {
+        when(recursoRepository.findById(100)).thenReturn(Optional.of(
+                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(FormatoRecurso.TEXTO).build()
+        ));
+        when(usuarioService.getAuthenticatedUsuario()).thenThrow(new IllegalStateException("No autenticado"));
+
+        assertThatThrownBy(() -> recursoService.eliminar(100))
+                .isInstanceOf(IllegalStateException.class);
+
+        verify(recursoRepository, never()).delete(any());
+    }
+
+    private void setupAuthentication(Usuario usuario) {
+        when(usuarioService.getAuthenticatedUsuario()).thenReturn(usuario);
     }
 }
