@@ -1,11 +1,7 @@
 package com.recolectaedu.controller;
 
 import com.recolectaedu.dto.request.UserRequestDTO;
-import com.recolectaedu.dto.response.CursoResponse2DTO;
-import com.recolectaedu.dto.response.RecursoResponse2DTO;
-import com.recolectaedu.dto.response.RecursoValoradoResponseDTO;
-import com.recolectaedu.dto.response.UserResponseDTO;
-import com.recolectaedu.dto.response.ResenaResponseDTO;
+import com.recolectaedu.dto.response.*;
 import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.service.CursoService;
 import com.recolectaedu.service.RecursoService;
@@ -13,6 +9,9 @@ import com.recolectaedu.service.UsuarioService;
 import com.recolectaedu.service.ResenaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -92,5 +91,17 @@ public class PublicController {
             @PathVariable Integer id_usuario
     ) {
         return ResponseEntity.ok(resenaService.listarPorUsuario(id_usuario));
+    }
+
+    //US18 - Ranking de cursos con mas aportes
+    @GetMapping("/cursos/ranking-aportes")
+    public ResponseEntity<Page<CursoRankingAportesDTO>> getRankingAportes(
+            @RequestParam(required = false) String universidad,
+            @RequestParam(required = false) String carrera,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<CursoRankingAportesDTO> response = cursoService.getRankingAportes(universidad, carrera, pageable);
+        return ResponseEntity.ok(response);
     }
 }
