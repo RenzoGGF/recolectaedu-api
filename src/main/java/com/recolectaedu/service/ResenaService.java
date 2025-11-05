@@ -12,7 +12,6 @@ import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,14 +41,7 @@ public class ResenaService {
     }
 
     @Transactional
-    public ResenaResponseDTO crearResena(@Valid ResenaRequestCreateDTO request) {
-        if (request.contenido() == null || request.contenido().isEmpty()) {
-            throw new IllegalArgumentException("El comentario no puede estar vacío");
-        }
-        if (request.es_positivo() == null) {
-            throw new IllegalArgumentException("El valor del voto no puede estar vacío");
-        }
-
+    public ResenaResponseDTO crearResena(ResenaRequestCreateDTO request) {
         Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
 
         Recurso recurso = recursoRepository.findById(request.id_recurso())
@@ -82,13 +74,6 @@ public class ResenaService {
     public ResenaResponseDTO actualizarResena(Integer id_resena, ResenaRequestUpdateDTO request) {
         Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
 
-        if (request.contenido() == null || request.contenido().isEmpty()) {
-            throw new IllegalArgumentException("El comentario no puede estar vacío");
-        }
-        if (request.es_positivo() == null) {
-            throw new IllegalArgumentException("El valor del voto no puede estar vacío");
-        }
-
         Resena resena = resenaRepository.findById(id_resena)
                 .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada"));
 
@@ -107,8 +92,6 @@ public class ResenaService {
 
         Resena resena = resenaRepository.findById(id_resena)
                 .orElseThrow(() -> new ResourceNotFoundException("Reseña no encontrada"));
-
-        validateOwnership(resena, usuarioActual);
 
         validateOwnership(resena, usuarioActual);
 

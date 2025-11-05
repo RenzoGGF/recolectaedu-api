@@ -61,7 +61,7 @@ public class CursoServiceTest {
     - Una Lista<CursoResponse2DTO> con 2 elementos.
     - El primer elemento debe ser "Cálculo I" (el de 100 aportes).
     - El segundo elemento debe ser "Física I" (el de 50 aportes).
-    List con atributos atributos:
+    List con atributos:
         Integer id_curso,
         String universidad,
         String nombre,
@@ -82,7 +82,7 @@ public class CursoServiceTest {
     @Test
     @DisplayName("Debe devolver cursos populares para una institución específica")
     void findCursosPopulares_whenInstitucionHasCursos_shouldReturnListaOrdenada() {
-        // GIVEN - Configuramos mocks y datos de prueba
+        // GIVEN
         String institucion = "UNMSM";
         CursoResponse2DTO curso1 = new CursoResponse2DTO(1, "UNMSM", "Cálculo I", "Sistemas", 100L);
         CursoResponse2DTO curso2 = new CursoResponse2DTO(2, "UNMSM", "Física I", "Industrial", 50L);
@@ -90,10 +90,10 @@ public class CursoServiceTest {
 
         given(cursoRepository.findCursosPopulares(institucion)).willReturn(mockListaCursos);
 
-        // WHEN - Se ejecuta el metodo a probar
+        // WHEN
         List<CursoResponse2DTO> resultado = cursoService.findCursosPopulares(institucion);
 
-        // THEN - Se verifican los resultados
+        // THEN
         assertThat(resultado).isNotNull();
         assertThat(resultado).hasSize(2);
         assertThat(resultado.get(0).totalRecursos()).isEqualTo(100L);
@@ -134,14 +134,14 @@ public class CursoServiceTest {
     @DisplayName("Debe devolver una lista vacía si la institución no tiene cursos")
     void findCursosPopulares_whenInstitucionHasNoCursos_shouldReturnListaVacia() {
 
-        // GIVEN - Configuramos el mock para devolver una lista vacía para una institución
+        // GIVEN
         String institucionSinCursos = "InstitucionX";
         given(cursoRepository.findCursosPopulares(institucionSinCursos)).willReturn(Collections.emptyList());
 
-        // WHEN - Se ejecuta el metodo a probar
+        // WHEN
         List<CursoResponse2DTO> resultado = cursoService.findCursosPopulares(institucionSinCursos);
 
-        // THEN - Se verifican los resultados
+        // THEN
         assertThat(resultado).isNotNull();
         assertThat(resultado).isEmpty();
         then(cursoRepository).should(times(1)).findCursosPopulares(institucionSinCursos);
