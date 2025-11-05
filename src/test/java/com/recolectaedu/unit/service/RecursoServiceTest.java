@@ -977,8 +977,8 @@ public class RecursoServiceTest {
             String autor = "Autor";
             String universidad = "UNMSM";
 
-            Object[] repoResult1 = new Object[]{ recursoReciente, 0L };
-            Object[] repoResult2 = new Object[]{ recursoAntiguo, 0L };
+            Object[] repoResult1 = new Object[]{recursoReciente, 0L};
+            Object[] repoResult2 = new Object[]{recursoAntiguo, 0L};
             List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
 
             given(recursoRepository.search(
@@ -1037,310 +1037,311 @@ public class RecursoServiceTest {
            elementos, probando que se retornaron todos, y está ordenada por defecto.
     */
 
-    @Test
-    @DisplayName("E - Debe devolver todos los recursos si no se proveen filtros")
-    void searchRecursos_whenNoFiltersProvided_shouldReturnAllRecursos() {
-        // GIVEN
-        Object[] repoResult1 = new Object[]{ recursoReciente, 0L }; //
-        Object[] repoResult2 = new Object[]{ recursoAntiguo, 0L }; //
+        @Test
+        @DisplayName("E - Debe devolver todos los recursos si no se proveen filtros")
+        void searchRecursos_whenNoFiltersProvided_shouldReturnAllRecursos() {
+            // GIVEN
+            Object[] repoResult1 = new Object[]{recursoReciente, 0L}; //
+            Object[] repoResult2 = new Object[]{recursoAntiguo, 0L}; //
 
-        List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
+            List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
 
-        given(recursoRepository.search(
-                isNull(),        // keyword
-                isNull(),        // cursoId
-                isNull(),        // tipoEnum
-                isNull(),        // autorNombre
-                isNull(),        // universidad
-                isNull(),        // calificacionMinima
-                eq(Sort.unsorted()) // sort
-        )).willReturn(mockResultList);
+            given(recursoRepository.search(
+                    isNull(),        // keyword
+                    isNull(),        // cursoId
+                    isNull(),        // tipoEnum
+                    isNull(),        // autorNombre
+                    isNull(),        // universidad
+                    isNull(),        // calificacionMinima
+                    eq(Sort.unsorted()) // sort
+            )).willReturn(mockResultList);
 
-        // WHEN
-        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, null, null, null, null
-        );
+            // WHEN
+            List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                    null, null, null, null, null, null, null
+            );
 
-        // THEN
-        assertThat(resultado).isNotNull();
-        assertThat(resultado).hasSize(2);
+            // THEN
+            assertThat(resultado).isNotNull();
+            assertThat(resultado).hasSize(2);
 
-        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
-        assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
+            assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+            assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
 
-        then(recursoRepository).should(times(1)).search(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
-        );
+            then(recursoRepository).should(times(1)).search(
+                    isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
+            );
 
-    }
+        }
 
-    /*
-    Escenario filtro por universidad
-    DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO ingreso en la sección de universidad una universidad presiono en “Buscar”
-    ENTONCES el sistema mostrará los recursos de la universidad.
+        /*
+        Escenario filtro por universidad
+        DADO que me encuentro en la sección de búsqueda avanzada
+        CUANDO ingreso en la sección de universidad una universidad presiono en “Buscar”
+        ENTONCES el sistema mostrará los recursos de la universidad.
 
-    ID: CP-1003
-    Historia: US-10
-    Escenario: Búsqueda simple por universidad
-    Precondiciones:
-    - Dos Recursos existen asociados a un curso de la "UNMSM".
-    - El 'recursoRepository.search()' está configurado para devolver
-      estos recursos cuando se busca por 'universidad = "UNMSM"'.
-    Datos de prueba:
-    - String universidad = "UNMSM"
-    Pasos:
-    1. Simular (mock) recursoRepository.search(null, null, null, null, "UNMSM", null, Sort.unsorted())
-       para que devuelva una lista de Object[] conteniendo ambos recursos.
-    2. Ejecutar recursoService.searchRecursos(null, null, null, null, "UNMSM", null, null).
-    Resultado esperado:
-    - Una Lista<RecursoResponse2DTO> con 2 elementos.
-    Explicación del test;
-    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
-           una lista simulada de 2 recursos cuando se llame
-           únicamente con la 'universidad="UNMSM"'.
-    WHEN:  Ejecutamos el metodo searchRecursos.
-    THEN:  Verificamos que la lista devuelta no es nula, tiene 2
-           elementos y que el servicio llamó al repositorio 1 vez.
-    */
-    @Test
-    @DisplayName("E - Debe buscar recursos por universidad")
-    void searchRecursos_whenUniversidadProvided_shouldReturnMatchingRecursos() {
-        // GIVEN
-        String universidad = "UNMSM";
+        ID: CP-1003
+        Historia: US-10
+        Escenario: Búsqueda simple por universidad
+        Precondiciones:
+        - Dos Recursos existen asociados a un curso de la "UNMSM".
+        - El 'recursoRepository.search()' está configurado para devolver
+          estos recursos cuando se busca por 'universidad = "UNMSM"'.
+        Datos de prueba:
+        - String universidad = "UNMSM"
+        Pasos:
+        1. Simular (mock) recursoRepository.search(null, null, null, null, "UNMSM", null, Sort.unsorted())
+           para que devuelva una lista de Object[] conteniendo ambos recursos.
+        2. Ejecutar recursoService.searchRecursos(null, null, null, null, "UNMSM", null, null).
+        Resultado esperado:
+        - Una Lista<RecursoResponse2DTO> con 2 elementos.
+        Explicación del test;
+        GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+               una lista simulada de 2 recursos cuando se llame
+               únicamente con la 'universidad="UNMSM"'.
+        WHEN:  Ejecutamos el metodo searchRecursos.
+        THEN:  Verificamos que la lista devuelta no es nula, tiene 2
+               elementos y que el servicio llamó al repositorio 1 vez.
+        */
+        @Test
+        @DisplayName("E - Debe buscar recursos por universidad")
+        void searchRecursos_whenUniversidadProvided_shouldReturnMatchingRecursos() {
+            // GIVEN
+            String universidad = "UNMSM";
 
-        Object[] repoResult1 = new Object[]{ recursoReciente, 0L };
-        Object[] repoResult2 = new Object[]{ recursoAntiguo, 0L };
+            Object[] repoResult1 = new Object[]{recursoReciente, 0L};
+            Object[] repoResult2 = new Object[]{recursoAntiguo, 0L};
 
-        List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
+            List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
 
-        given(recursoRepository.search(
-                isNull(),        // keyword
-                isNull(),        // cursoId
-                isNull(),        // tipoEnum
-                isNull(),        // autorNombre
-                eq(universidad), // universidad
-                isNull(),        // calificacionMinima
-                eq(Sort.unsorted()) // sort
-        )).willReturn(mockResultList);
+            given(recursoRepository.search(
+                    isNull(),        // keyword
+                    isNull(),        // cursoId
+                    isNull(),        // tipoEnum
+                    isNull(),        // autorNombre
+                    eq(universidad), // universidad
+                    isNull(),        // calificacionMinima
+                    eq(Sort.unsorted()) // sort
+            )).willReturn(mockResultList);
 
-        // WHEN
-        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, null, universidad, null, null
-        );
+            // WHEN
+            List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                    null, null, null, null, universidad, null, null
+            );
 
-        // THEN
-        assertThat(resultado).isNotNull();
-        assertThat(resultado).hasSize(2);
+            // THEN
+            assertThat(resultado).isNotNull();
+            assertThat(resultado).hasSize(2);
 
-        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
-        assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
+            assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+            assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
 
-        then(recursoRepository).should(times(1)).search(
-                isNull(), isNull(), isNull(), isNull(), eq(universidad), isNull(), eq(Sort.unsorted())
-        );
-    }
+            then(recursoRepository).should(times(1)).search(
+                    isNull(), isNull(), isNull(), isNull(), eq(universidad), isNull(), eq(Sort.unsorted())
+            );
+        }
 
-    /*
-    Escenario filtro por nombre o apellido
-    DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO ingreso en la sección de autor el nombre o apellido del autor
-    ENTONCES el sistema mostrará los mismos recursos del autor.
+        /*
+        Escenario filtro por nombre o apellido
+        DADO que me encuentro en la sección de búsqueda avanzada
+        CUANDO ingreso en la sección de autor el nombre o apellido del autor
+        ENTONCES el sistema mostrará los mismos recursos del autor.
 
-    ID: CP-1004
-    Historia: US-10
-    Escenario: Búsqueda simple por nombre de autor
-    Precondiciones:
-    - Dos Recursos existen asociados a un usuario.
-    - El 'perfil' de ese usuario tiene 'nombre = "Autor Test"'.
-    - El 'recursoRepository.search()' está configurado para devolver
-      estos recursos cuando se busca por 'autor = "Autor"'.
-    Datos de prueba:
-    - String autor = "Autor"
-    Pasos:
-    1. Simular recursoRepository.search(null, null, null, "Autor", null, null, Sort.unsorted())
-       para que devuelva una lista de Object[] conteniendo ambos recursos.
-    2. Ejecutar recursoService.searchRecursos(null, null, null, "Autor", null, null, null).
-    Resultado esperado:
-    - Una Lista<RecursoResponse2DTO> con 2 elementos.
-    Explicación del test;
-    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
-           una lista simulada de 2 recursos cuando se llame
-           únicamente con el 'autor="Autor"'.
-    WHEN:  Ejecutamos el metodo searchRecursos.
-    THEN:  Verificamos que la lista devuelta no es nula, tiene 2
-           elementos y que el servicio llamó al repositorio 1 vez.
-    */
-    @Test
-    @DisplayName("E - Debe buscar recursos por nombre de autor")
-    void searchRecursos_whenAutorProvided_shouldReturnMatchingRecursos() {
-        // GIVEN
-        String autor = "Autor";
+        ID: CP-1004
+        Historia: US-10
+        Escenario: Búsqueda simple por nombre de autor
+        Precondiciones:
+        - Dos Recursos existen asociados a un usuario.
+        - El 'perfil' de ese usuario tiene 'nombre = "Autor Test"'.
+        - El 'recursoRepository.search()' está configurado para devolver
+          estos recursos cuando se busca por 'autor = "Autor"'.
+        Datos de prueba:
+        - String autor = "Autor"
+        Pasos:
+        1. Simular recursoRepository.search(null, null, null, "Autor", null, null, Sort.unsorted())
+           para que devuelva una lista de Object[] conteniendo ambos recursos.
+        2. Ejecutar recursoService.searchRecursos(null, null, null, "Autor", null, null, null).
+        Resultado esperado:
+        - Una Lista<RecursoResponse2DTO> con 2 elementos.
+        Explicación del test;
+        GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+               una lista simulada de 2 recursos cuando se llame
+               únicamente con el 'autor="Autor"'.
+        WHEN:  Ejecutamos el metodo searchRecursos.
+        THEN:  Verificamos que la lista devuelta no es nula, tiene 2
+               elementos y que el servicio llamó al repositorio 1 vez.
+        */
+        @Test
+        @DisplayName("E - Debe buscar recursos por nombre de autor")
+        void searchRecursos_whenAutorProvided_shouldReturnMatchingRecursos() {
+            // GIVEN
+            String autor = "Autor";
 
-        Object[] repoResult1 = new Object[]{ recursoReciente, 0L };
-        Object[] repoResult2 = new Object[]{ recursoAntiguo, 0L };
+            Object[] repoResult1 = new Object[]{recursoReciente, 0L};
+            Object[] repoResult2 = new Object[]{recursoAntiguo, 0L};
 
-        List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
+            List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
 
-        given(recursoRepository.search(
-                isNull(),        // keyword
-                isNull(),        // cursoId
-                isNull(),        // tipoEnum
-                eq(autor),       // autorNombre
-                isNull(),        // universidad
-                isNull(),        // calificacionMinima
-                eq(Sort.unsorted()) // sort
-        )).willReturn(mockResultList);
+            given(recursoRepository.search(
+                    isNull(),        // keyword
+                    isNull(),        // cursoId
+                    isNull(),        // tipoEnum
+                    eq(autor),       // autorNombre
+                    isNull(),        // universidad
+                    isNull(),        // calificacionMinima
+                    eq(Sort.unsorted()) // sort
+            )).willReturn(mockResultList);
 
-        // WHEN
-        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, autor, null, null, null
-        );
+            // WHEN
+            List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                    null, null, null, autor, null, null, null
+            );
 
-        // THEN
-        assertThat(resultado).isNotNull();
-        assertThat(resultado).hasSize(2);
+            // THEN
+            assertThat(resultado).isNotNull();
+            assertThat(resultado).hasSize(2);
 
-        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
-        assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
+            assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+            assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
 
-        then(recursoRepository).should(times(1)).search(
-                isNull(), isNull(), isNull(), eq(autor), isNull(), isNull(), eq(Sort.unsorted())
-        );
-    }
+            then(recursoRepository).should(times(1)).search(
+                    isNull(), isNull(), isNull(), eq(autor), isNull(), isNull(), eq(Sort.unsorted())
+            );
+        }
 
-    /*
-    Escenario Busqueda con ordenamiento base o “recientes”
-    DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO selecciono ordenamiento nada o recientes
-    ENTONCES el sistema mostrará los recursos en orden según creación.
+        /*
+        Escenario Busqueda con ordenamiento base o “recientes”
+        DADO que me encuentro en la sección de búsqueda avanzada
+        CUANDO selecciono ordenamiento nada o recientes
+        ENTONCES el sistema mostrará los recursos en orden según creación.
 
-    ID: CP-1005
-    Historia: US-10
-    Escenario: Búsqueda con ordenamiento por defecto
-    Precondiciones:
-    - El repositorio tiene 2 recursos ('recursoReciente' y 'recursoAntiguo').
-    - El mock del repositorio devolverá la lista en desorden
-      ('recursoAntiguo' primero).
-    Datos de prueba:
-    - Todos los parámetros del servicio son null.
-    Pasos:
-    1. Simular recursoRepository.search(null, ..., null, Sort.unsorted())
-       para que devuelva una lista de Object[] desordenada
-       ([recursoAntiguo], [recursoReciente]).
-    2. Ejecutar recursoService.searchRecursos(null, ..., null, null).
-    Resultado esperado:
-    - Una Lista<RecursoResponse2DTO> con 2 elementos.
-    - El primer elemento debe ser "Recurso Reciente" (el servicio lo reordenó).
-    Explicación del test;
-    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
-           una lista simulada de 2 recursos en desorden (antiguo primero).
-    WHEN:  Ejecutamos el metodo searchRecursos con 'ordenarPor' en null.
-    THEN:  Verificamos que la lista devuelta está ordenada correctamente,
-           probando que el 'else' del 'sort()'
-           del servicio funcionó.
-    */
-    @Test
-    @DisplayName("E - Debe ordenar por 'recientes' (defecto) si 'ordenarPor' es null")
-    void searchRecursos_whenOrdenarPorIsNull_shouldReturnSortedByRecientes() {
-        // GIVEN
-        Object[] repoResult1 = new Object[]{ recursoAntiguo, 0L };
-        Object[] repoResult2 = new Object[]{ recursoReciente, 0L };
+        ID: CP-1005
+        Historia: US-10
+        Escenario: Búsqueda con ordenamiento por defecto
+        Precondiciones:
+        - El repositorio tiene 2 recursos ('recursoReciente' y 'recursoAntiguo').
+        - El mock del repositorio devolverá la lista en desorden
+          ('recursoAntiguo' primero).
+        Datos de prueba:
+        - Todos los parámetros del servicio son null.
+        Pasos:
+        1. Simular recursoRepository.search(null, ..., null, Sort.unsorted())
+           para que devuelva una lista de Object[] desordenada
+           ([recursoAntiguo], [recursoReciente]).
+        2. Ejecutar recursoService.searchRecursos(null, ..., null, null).
+        Resultado esperado:
+        - Una Lista<RecursoResponse2DTO> con 2 elementos.
+        - El primer elemento debe ser "Recurso Reciente" (el servicio lo reordenó).
+        Explicación del test;
+        GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+               una lista simulada de 2 recursos en desorden (antiguo primero).
+        WHEN:  Ejecutamos el metodo searchRecursos con 'ordenarPor' en null.
+        THEN:  Verificamos que la lista devuelta está ordenada correctamente,
+               probando que el 'else' del 'sort()'
+               del servicio funcionó.
+        */
+        @Test
+        @DisplayName("E - Debe ordenar por 'recientes' (defecto) si 'ordenarPor' es null")
+        void searchRecursos_whenOrdenarPorIsNull_shouldReturnSortedByRecientes() {
+            // GIVEN
+            Object[] repoResult1 = new Object[]{recursoAntiguo, 0L};
+            Object[] repoResult2 = new Object[]{recursoReciente, 0L};
 
-        List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
+            List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
 
-        given(recursoRepository.search(
-                isNull(),        // keyword
-                isNull(),        // cursoId
-                isNull(),        // tipoEnum
-                isNull(),        // autorNombre
-                isNull(),        // universidad
-                isNull(),        // calificacionMinima
-                eq(Sort.unsorted()) // sort
-        )).willReturn(mockResultList);
+            given(recursoRepository.search(
+                    isNull(),        // keyword
+                    isNull(),        // cursoId
+                    isNull(),        // tipoEnum
+                    isNull(),        // autorNombre
+                    isNull(),        // universidad
+                    isNull(),        // calificacionMinima
+                    eq(Sort.unsorted()) // sort
+            )).willReturn(mockResultList);
 
-        // WHEN
-        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, null, null, null, null // 'ordenarPor' es null
-        );
+            // WHEN
+            List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                    null, null, null, null, null, null, null // 'ordenarPor' es null
+            );
 
-        // THEN
-        assertThat(resultado).isNotNull();
-        assertThat(resultado).hasSize(2);
+            // THEN
+            assertThat(resultado).isNotNull();
+            assertThat(resultado).hasSize(2);
 
-        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
-        assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
+            assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Reciente");
+            assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Antiguo");
 
-        then(recursoRepository).should(times(1)).search(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
-        );
-    }
+            then(recursoRepository).should(times(1)).search(
+                    isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
+            );
+        }
 
-    /*
-    Escenario ordenamiento “Relevantes”
-    DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO selecciono ordenamiento relevantes
-    ENTONCES el sistema mostrará los recursos en orden según valoración.
+        /*
+        Escenario ordenamiento “Relevantes”
+        DADO que me encuentro en la sección de búsqueda avanzada
+        CUANDO selecciono ordenamiento relevantes
+        ENTONCES el sistema mostrará los recursos en orden según valoración.
 
-    ID: CP-1006
-    Historia: US-10
-    Escenario: Búsqueda con ordenamiento por "relevantes"
-    Precondiciones:
-    - El repositorio tiene 2 recursos.
-    - 'recursoReciente' tiene un score de 5.
-    - 'recursoAntiguo' tiene un score de 10.
-    - El mock del repositorio devolverá la lista en orden de "recientes".
-    Datos de prueba:
-    - String ordenarPor = "relevantes"
-    Pasos:
-    1. Simular recursoRepository.search(null, ..., null, Sort.unsorted())
-       para que devuelva una lista de Object[] con scores ([recursoReciente, 5L], [recursoAntiguo, 10L]).
-    2. Ejecutar recursoService.searchRecursos(null, ..., null, "relevantes").
-    Resultado esperado:
-    - Una Lista<RecursoResponse2DTO> con 2 elementos.
-    - El primer elemento debe ser "Recurso Antiguo".
-    Explicación del test;
-    GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
-           una lista simulada de 2 recursos con sus scores.
-    WHEN:  Ejecutamos el metodo searchRecursos con 'ordenarPor' = "relevantes".
-    THEN:  Verificamos que la lista devuelta está ordenada por 'score'
-           (relevancia), probando que el 'if ("relevantes")'
-           del servicio funcionó.
-    */
-    @Test
-    @DisplayName("E - Debe ordenar por 'relevantes' si 'ordenarPor' lo indica")
-    void searchRecursos_whenOrdenarPorIsRelevantes_shouldReturnSortedByScore() {
-        // GIVEN
-        Object[] repoResult1 = new Object[]{ recursoReciente, 5L }; //
-        Object[] repoResult2 = new Object[]{ recursoAntiguo, 10L }; //
+        ID: CP-1006
+        Historia: US-10
+        Escenario: Búsqueda con ordenamiento por "relevantes"
+        Precondiciones:
+        - El repositorio tiene 2 recursos.
+        - 'recursoReciente' tiene un score de 5.
+        - 'recursoAntiguo' tiene un score de 10.
+        - El mock del repositorio devolverá la lista en orden de "recientes".
+        Datos de prueba:
+        - String ordenarPor = "relevantes"
+        Pasos:
+        1. Simular recursoRepository.search(null, ..., null, Sort.unsorted())
+           para que devuelva una lista de Object[] con scores ([recursoReciente, 5L], [recursoAntiguo, 10L]).
+        2. Ejecutar recursoService.searchRecursos(null, ..., null, "relevantes").
+        Resultado esperado:
+        - Una Lista<RecursoResponse2DTO> con 2 elementos.
+        - El primer elemento debe ser "Recurso Antiguo".
+        Explicación del test;
+        GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+               una lista simulada de 2 recursos con sus scores.
+        WHEN:  Ejecutamos el metodo searchRecursos con 'ordenarPor' = "relevantes".
+        THEN:  Verificamos que la lista devuelta está ordenada por 'score'
+               (relevancia), probando que el 'if ("relevantes")'
+               del servicio funcionó.
+        */
+        @Test
+        @DisplayName("E - Debe ordenar por 'relevantes' si 'ordenarPor' lo indica")
+        void searchRecursos_whenOrdenarPorIsRelevantes_shouldReturnSortedByScore() {
+            // GIVEN
+            Object[] repoResult1 = new Object[]{recursoReciente, 5L}; //
+            Object[] repoResult2 = new Object[]{recursoAntiguo, 10L}; //
 
-        List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
+            List<Object[]> mockResultList = new java.util.ArrayList<>(List.of(repoResult1, repoResult2));
 
-        given(recursoRepository.search(
-                isNull(),        // keyword
-                isNull(),        // cursoId
-                isNull(),        // tipoEnum
-                isNull(),        // autorNombre
-                isNull(),        // universidad
-                isNull(),        // calificacionMinima
-                eq(Sort.unsorted()) // sort
-        )).willReturn(mockResultList);
+            given(recursoRepository.search(
+                    isNull(),        // keyword
+                    isNull(),        // cursoId
+                    isNull(),        // tipoEnum
+                    isNull(),        // autorNombre
+                    isNull(),        // universidad
+                    isNull(),        // calificacionMinima
+                    eq(Sort.unsorted()) // sort
+            )).willReturn(mockResultList);
 
-        // WHEN
-        List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
-                null, null, null, null, null, null, OrdenRecurso.valueOf("RELEVANTES")
-        );
+            // WHEN
+            List<RecursoResponse2DTO> resultado = recursoService.searchRecursos(
+                    null, null, null, null, null, null, OrdenRecurso.valueOf("RELEVANTES")
+            );
 
-        // THEN
-        assertThat(resultado).isNotNull();
-        assertThat(resultado).hasSize(2);
+            // THEN
+            assertThat(resultado).isNotNull();
+            assertThat(resultado).hasSize(2);
 
-        assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Antiguo"); // El de score 10
-        assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Reciente"); // El de score 5
+            assertThat(resultado.get(0).titulo()).isEqualTo("Recurso Antiguo"); // El de score 10
+            assertThat(resultado.get(1).titulo()).isEqualTo("Recurso Reciente"); // El de score 5
 
-        then(recursoRepository).should(times(1)).search(
-                isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
-        );
+            then(recursoRepository).should(times(1)).search(
+                    isNull(), isNull(), isNull(), isNull(), isNull(), isNull(), eq(Sort.unsorted())
+            );
+        }
     }
 
     @Test
