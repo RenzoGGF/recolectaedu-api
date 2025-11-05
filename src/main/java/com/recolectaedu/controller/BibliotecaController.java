@@ -4,15 +4,13 @@ import com.recolectaedu.dto.response.BibliotecaResponseDTO;
 import com.recolectaedu.service.BibliotecaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
 @RestController
-@RequestMapping("/usuarios/{id_usuario}/biblioteca")
+@RequestMapping("/usuarios/biblioteca")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class BibliotecaController {
 
     private final BibliotecaService bibliotecaService;
