@@ -66,6 +66,9 @@ public class UsuarioService {
     public UserResponseDTO obtenerUsuarioPorIdDTO(Integer id) {
         var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        validarPropietarioOAdmin(user);
+
         return toDTO(user);
     }
 
@@ -74,6 +77,8 @@ public class UsuarioService {
     public UserResponseDTO actualizarPerfilDTO(Integer id, PerfilRequestDTO dto) {
         var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        validarPropietarioOAdmin(user);
 
         var perfil = user.getPerfil();
         if (perfil == null) {
@@ -96,6 +101,9 @@ public class UsuarioService {
     public void eliminarUsuario(Integer id) {
         var user = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        validarPropietarioOAdmin(user);
+
         usuarioRepository.delete(user); // orphanRemoval=true elimina también el Perfil
     }
 
@@ -161,5 +169,20 @@ public class UsuarioService {
         String email = auth.getName();
         return usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+    }
+
+    // helper validar usuario propietario o admin
+    private void validarPropietarioOAdmin(Usuario objetivo) {
+        Usuario auth = getAuthenticatedUsuario(); // el usuario del token
+
+        // ADMIN, puede operar sobre cualquier usuario
+        if (auth.getRolTipo() == RolTipo.ROLE_ADMIN) {
+            return;
+        }
+
+        // NO ADMIN, solo puede operar sobre su propio id
+        if (!auth.getId_usuario().equals(objetivo.getId_usuario())) {
+            throw new AccessDeniedException("No puedes operar sobre otra cuenta de usuario");
+        }
     }
 }

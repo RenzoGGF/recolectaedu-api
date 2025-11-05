@@ -9,8 +9,6 @@ public record ForoRequestDTO(
         String titulo,
         @NotNull(message = "El contenido no puede ser nulo")
         @Size(min = 20, message = "El contenido debe tener al menos 20 caracteres")
-        String contenido,
-        @NotNull(message = "El usuario tiene que estar registrado")
-        Integer id_usuario
+        String contenido
 ) {
 }
