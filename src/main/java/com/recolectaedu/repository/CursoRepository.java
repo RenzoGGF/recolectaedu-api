@@ -26,16 +26,14 @@ public interface CursoRepository extends JpaRepository<Curso, Integer> {
     List<CursoResponse2DTO> findCursosPopulares(@Param("institucion") String institucion);
 
     @Query("SELECT new com.recolectaedu.dto.response.CursoRankingAportesDTO(" +
-            "c.id, c.nombre, c.universidad, c.carrera, (COUNT(DISTINCT r.id) + COUNT(DISTINCT com.id))) " +
+            "c.id_curso, c.nombre, c.universidad, c.carrera, (COUNT(DISTINCT r.id_recurso) + COUNT(DISTINCT res.id_resena))) " +
             "FROM Curso c " +
-            "LEFT JOIN Recurso r ON r.curso = c " +
-            "LEFT JOIN Comentario com ON com.recurso = r " +
+            "LEFT JOIN Recurso r ON c = r.curso " +
+            "LEFT JOIN Resena res ON r = res.recurso " +
             "WHERE (:universidad IS NULL OR c.universidad = :universidad) " +
             "AND (:carrera IS NULL OR c.carrera = :carrera) " +
-            "GROUP BY c.id, c.nombre, c.universidad, c.carrera " +
-            "ORDER BY (COUNT(DISTINCT r.id) + COUNT(DISTINCT com.id)) DESC, c.nombre ASC")
-    Page<CursoRankingAportesDTO> rankingPorAportes(@Param("universidad") String universidad, @Param("carrera") String carrera, Pageable pageable);
-
-    Optional<Curso> findByUniversidadAndCarreraAndNombre(String universidad, String carrera, String nombre);
+            "GROUP BY c.id_curso, c.nombre, c.universidad, c.carrera " +
+            "ORDER BY (COUNT(DISTINCT r.id_recurso) + COUNT(DISTINCT res.id_resena)) DESC, c.nombre ASC")
+    Page<CursoRankingAportesDTO> rankingPorAportes(@Param("universidad") String universidad, @Param("carrera") String carrera, Pageable pageable);Optional<Curso> findByUniversidadAndCarreraAndNombre(String universidad, String carrera, String nombre);
 
 }
