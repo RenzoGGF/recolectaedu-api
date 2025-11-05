@@ -1,5 +1,7 @@
 package com.recolectaedu.unit.service;
 
+import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
+import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
 import com.recolectaedu.dto.response.*;
@@ -32,6 +34,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -119,6 +123,210 @@ public class RecursoServiceTest {
                 .build();
     }
 
+    private Usuario createMockUsuario(Integer id, String email) {
+        Usuario usuario = new Usuario();
+        usuario.setId_usuario(id);
+        usuario.setEmail(email);
+        return usuario;
+    }
+
+    private Curso createMockCurso(Integer id, String nombre, String universidad, String carrera) {
+        Curso curso = new Curso();
+        curso.setId_curso(id);
+        curso.setNombre(nombre);
+        curso.setUniversidad(universidad);
+        curso.setCarrera(carrera);
+        return curso;
+    }
+
+    // ==================== US-05: PUBLICAR RECURSO ====================
+    @Nested
+    @DisplayName("US-05: Publicar Recurso")
+    class PublicarRecursoTests {
+
+        @Test
+        @DisplayName("CP-0501: Publicar archivo PDF válido")
+        void crearDesdeArchivo_ValidPdfFile_Success() {
+            // Arrange
+            Integer userId = 1;
+            String university = "UNMSM";
+            String career = "Software";
+            String courseName = "Cálculo I";
+
+            Usuario mockUser = createMockUsuario(userId, "john@example.com");
+            Curso mockCourse = createMockCurso(1, courseName, university, career);
+
+            RecursoArchivoCreateRequestDTO request = new RecursoArchivoCreateRequestDTO(
+                    userId, university, career, courseName,
+                    "Resumen de Cálculo I", "Resumen completo", FormatoRecurso.ARCHIVO, Tipo_recurso.Apuntes,
+                    2024, 1
+            );
+            MultipartFile mockFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[5 * 1024 * 1024]);
+
+            when(usuarioRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(cursoRepository.findByUniversidadAndCarreraAndNombre(university, career, courseName)).thenReturn(Optional.of(mockCourse));
+            when(almacenamientoService.almacenar(mockFile)).thenReturn("some-file-name.pdf");
+            when(recursoRepository.save(any(Recurso.class))).thenAnswer(invocation -> {
+                Recurso r = invocation.getArgument(0);
+                r.setId_recurso(1);
+                return r;
+            });
+
+            // Act
+            RecursoResponseDTO response = recursoService.crearDesdeArchivo(mockFile, request);
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.getId_recurso()).isEqualTo(1);
+            assertThat(response.getTitulo()).isEqualTo(request.titulo());
+            assertThat(response.getFormato()).isEqualTo(FormatoRecurso.ARCHIVO);
+            assertThat(response.getContenido()).isEqualTo("some-file-name.pdf");
+
+            verify(almacenamientoService).almacenar(mockFile);
+            verify(recursoRepository).save(any(Recurso.class));
+        }
+
+        @Test
+        @DisplayName("CP-0502: Rechazar archivo que excede tamaño")
+        void crearDesdeArchivo_FileSizeExceedsLimit_ThrowsException() {
+            // Arrange
+            Integer userId = 1;
+            String university = "UNMSM";
+            String career = "Software";
+            String courseName = "Algoritmos";
+
+            RecursoArchivoCreateRequestDTO request = new RecursoArchivoCreateRequestDTO(
+                    userId, university, career, courseName,
+                    "Libro de Algoritmos", "Libro completo", FormatoRecurso.ARCHIVO, Tipo_recurso.Apuntes,
+                    2024, 1
+            );
+            MultipartFile mockFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[15 * 1024 * 1024]);
+
+            // Only stub the method that is expected to throw the exception
+            when(almacenamientoService.almacenar(mockFile)).thenThrow(new BusinessRuleException("El archivo excede el tamaño máximo permitido de 10MB"));
+
+            // Act & Assert
+            assertThatThrownBy(() -> recursoService.crearDesdeArchivo(mockFile, request))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("El archivo excede el tamaño máximo permitido de 10MB");
+
+            verify(almacenamientoService).almacenar(mockFile);
+            verify(usuarioRepository, never()).findById(anyInt());
+            verify(cursoRepository, never()).findByUniversidadAndCarreraAndNombre(any(), any(), any());
+            verify(recursoRepository, never()).save(any(Recurso.class));
+        }
+
+        @Test
+        @DisplayName("CP-0503: Publicar enlace válido")
+        void crear_ValidLink_Success() {
+            // Arrange
+            Integer userId = 1;
+            String university = "UNMSM";
+            String career = "Software";
+            String courseName = "Ingeniería de Software";
+
+            Usuario mockUser = createMockUsuario(userId, "john@example.com");
+            Curso mockCourse = createMockCurso(1, courseName, university, career);
+
+            RecursoCreateRequestDTO request = new RecursoCreateRequestDTO(
+                    userId, university, career, courseName,
+                    "Tutorial de Spring Boot", "Video explicativo", "https://youtube.com/video", FormatoRecurso.ENLACE, Tipo_recurso.Practicas,
+                    2024, 1
+            );
+
+            when(usuarioRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(cursoRepository.findByUniversidadAndCarreraAndNombre(university, career, courseName)).thenReturn(Optional.of(mockCourse));
+            when(recursoRepository.save(any(Recurso.class))).thenAnswer(invocation -> {
+                Recurso r = invocation.getArgument(0);
+                r.setId_recurso(2);
+                return r;
+            });
+
+            // Act
+            RecursoResponseDTO response = recursoService.crear(request);
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.getId_recurso()).isEqualTo(2);
+            assertThat(response.getContenido()).isEqualTo(request.contenido());
+            assertThat(response.getFormato()).isEqualTo(FormatoRecurso.ENLACE);
+
+            verify(recursoRepository).save(any(Recurso.class));
+        }
+
+        @Test
+        @DisplayName("CP-0504: Publicar texto válido")
+        void crear_ValidText_Success() {
+            // Arrange
+            Integer userId = 1;
+            String university = "UNMSM";
+            String career = "Software";
+            String courseName = "Cálculo I";
+
+            Usuario mockUser = createMockUsuario(userId, "john@example.com");
+            Curso mockCourse = createMockCurso(1, courseName, university, career);
+
+            RecursoCreateRequestDTO request = new RecursoCreateRequestDTO(
+                    userId, university, career, courseName,
+                    "Fórmulas de Derivadas", "Resumen de fórmulas", """
+                    1. Derivada de x^n = nx^(n-1)
+                    2. Derivada de e^x = e^x
+                    3. Derivada de ln(x) = 1/x
+                    """, FormatoRecurso.TEXTO, Tipo_recurso.Apuntes,
+                    2024, 1
+            );
+
+            when(usuarioRepository.findById(userId)).thenReturn(Optional.of(mockUser));
+            when(cursoRepository.findByUniversidadAndCarreraAndNombre(university, career, courseName)).thenReturn(Optional.of(mockCourse));
+            when(recursoRepository.save(any(Recurso.class))).thenAnswer(invocation -> {
+                Recurso r = invocation.getArgument(0);
+                r.setId_recurso(3);
+                return r;
+            });
+
+            // Act
+            RecursoResponseDTO response = recursoService.crear(request);
+
+            // Assert
+            assertThat(response).isNotNull();
+            assertThat(response.getId_recurso()).isEqualTo(3);
+            assertThat(response.getContenido()).isEqualTo(request.contenido());
+            assertThat(response.getFormato()).isEqualTo(FormatoRecurso.TEXTO);
+
+            verify(recursoRepository).save(any(Recurso.class));
+        }
+
+        @Test
+        @DisplayName("CP-0505: Rechazar archivo corrupto")
+        void crearDesdeArchivo_CorruptedFile_ThrowsException() {
+            // Arrange
+            Integer userId = 1;
+            String university = "UNMSM";
+            String career = "Software";
+            String courseName = "Programación";
+
+            RecursoArchivoCreateRequestDTO request = new RecursoArchivoCreateRequestDTO(
+                    userId, university, career, courseName,
+                    "Archivo corrupto", "Descripción", FormatoRecurso.ARCHIVO, Tipo_recurso.Apuntes,
+                    2024, 1
+            );
+            MultipartFile mockFile = new MockMultipartFile("file", "corrupt.pdf", "application/pdf", new byte[0]);
+
+            // Only stub the method that is expected to throw the exception
+            when(almacenamientoService.almacenar(mockFile)).thenThrow(new BusinessRuleException("El archivo no es válido o está corrupto."));
+
+            // Act & Assert
+            assertThatThrownBy(() -> recursoService.crearDesdeArchivo(mockFile, request))
+                    .isInstanceOf(BusinessRuleException.class)
+                    .hasMessageContaining("El archivo no es válido o está corrupto.");
+
+            verify(almacenamientoService).almacenar(mockFile);
+            verify(usuarioRepository, never()).findById(anyInt());
+            verify(cursoRepository, never()).findByUniversidadAndCarreraAndNombre(any(), any(), any());
+            verify(recursoRepository, never()).save(any(Recurso.class));
+        }
+    }
+
     @Nested
     @DisplayName("US-08: Historial de Aportes")
     class HistorialDeAportesTests {
@@ -167,18 +375,18 @@ public class RecursoServiceTest {
             mockResourceCounters(3, 0L, 0L, 0L);
 
             // Act
-             Page<AporteConContadoresResponseDTO> response = recursoService.listarMisAportes(userId, null, null, Pageable.unpaged());
+            Page<AporteConContadoresResponseDTO> response = recursoService.listarMisAportes(userId, null, null, Pageable.unpaged());
 
             // Assert
             assertThat(response).isNotNull();
             assertThat(response.getContent()).hasSize(3);
-    
+
             assertThat(response.getContent().get(0).getTitulo()).isEqualTo("Fórmulas de Derivadas");
             assertThat(response.getContent().get(0).getTipo()).isEqualTo(Tipo_recurso.Ejercicios);
-    
+
             assertThat(response.getContent().get(1).getTitulo()).isEqualTo("Tutorial de Spring Boot");
             assertThat(response.getContent().get(2).getTitulo()).isEqualTo("Resumen de Cálculo I");
-    
+
             AporteConContadoresResponseDTO firstResource = response.getContent().get(0);
             assertThat(firstResource.getTitulo()).isNotNull();
             assertThat(firstResource.getTipo()).isNotNull();
@@ -187,7 +395,7 @@ public class RecursoServiceTest {
             assertThat(firstResource.getVotosPositivos()).isEqualTo(0);
             assertThat(firstResource.getVotosNegativos()).isEqualTo(0);
             assertThat(firstResource.getComentarios()).isEqualTo(0);
-    
+
             assertThat(response.getContent().get(0).getFechaCreacion())
                     .isAfter(response.getContent().get(1).getFechaCreacion());
             assertThat(response.getContent().get(1).getFechaCreacion())
@@ -242,7 +450,7 @@ public class RecursoServiceTest {
             assertThat(response.getContent()).allMatch(r -> r.getTipo() == Tipo_recurso.Apuntes);
             assertThat(response.getContent().get(0).getTitulo()).isEqualTo("Guía de Programación");
             assertThat(response.getContent().get(1).getTitulo()).isEqualTo("Resumen de Cálculo I");
-            
+
             assertThat(response.getContent().get(0).getFechaCreacion())
                     .isAfter(response.getContent().get(1).getFechaCreacion());
         }
@@ -275,7 +483,7 @@ public class RecursoServiceTest {
         /*
         Escenario 1: Búsqueda de recursos exitosa (filtrado)
         DADO que me encuentro en la sección de recursos de un curso
-        CUANDO selecciono el filtro de “Recientes”
+        CUANDO selecciono el filtro de "Recientes"
         ENTONCES el sistema muestra los recursos pertenecientes al curso.
 
         ID: CP-1201
@@ -328,7 +536,7 @@ public class RecursoServiceTest {
         /*
         Escenario 2: Búsqueda sin recursos (sin contenido)
         DADO que me encuentro en la sección de recursos de un curso
-        CUANDO selecciono el filtro de “Recientes” y no existen recursos
+        CUANDO selecciono el filtro de "Recientes" y no existen recursos
         relacionados al curso
         ENTONCES el sistema muestra un mensaje de sin contenido.
 
@@ -427,7 +635,7 @@ public class RecursoServiceTest {
         /*
     Escenario búsqueda palabra clave:
     DADO que me encuentro en el buscador de recursos
-    CUANDO escribo una palabra clave y presiono en “Buscar”
+    CUANDO escribo una palabra clave y presiono en "Buscar"
     ENTONCES se muestran los recursos que contengan la palabra clave.
 
     ID: CP-0901
@@ -493,7 +701,7 @@ public class RecursoServiceTest {
         /*
         Escenario búsqueda tipo:
         DADO que me encuentro en el buscador de recursos
-        CUANDO selecciono un tipo de recurso y presiono en “Buscar”
+        CUANDO selecciono un tipo de recurso y presiono en "Buscar"
         ENTONCES se muestran los recursos que sean de ese tipo.
 
         ID: CP-0902
@@ -557,7 +765,7 @@ public class RecursoServiceTest {
         /*
         Escenario búsqueda curso:
         DADO que me encuentro en el buscador de recursos
-        CUANDO escribo un ID del curso y presiono en “Buscar”
+        CUANDO escribo un ID del curso y presiono en "Buscar"
         ENTONCES se muestran los recursos que contenga ese curso.
 
         ID: CP-0903
@@ -620,7 +828,7 @@ public class RecursoServiceTest {
         /*
         Escenario busqueda por palabra clave y tipo :
         DADO que me encuentro en el buscador de recursos
-        CUANDO escribo una palabra clave y selecciono el tipo de recurso y presiono en “Buscar”
+        CUANDO escribo una palabra clave y selecciono el tipo de recurso y presiono en "Buscar"
         ENTONCES el sistema muestra los recursos que contengan la palabra clave
         y que coincidan con el tipo de recursos solicitado.
 
@@ -687,38 +895,38 @@ public class RecursoServiceTest {
         }
 
 
-    /*
-        Escenario busqueda por palabra clave y curso:
-        DADO que me encuentro en el buscador de recursos
-        CUANDO escribo una palabra clave y el ID del curso y presiono en “Buscar”
-        ENTONCES el sistema muestra los recursos que contengan la palabra clave
-        y que coincidan con el ID del curso solicitado.
+        /*
+            Escenario busqueda por palabra clave y curso:
+            DADO que me encuentro en el buscador de recursos
+            CUANDO escribo una palabra clave y el ID del curso y presiono en "Buscar"
+            ENTONCES el sistema muestra los recursos que contengan la palabra clave
+            y que coincidan con el ID del curso solicitado.
 
-        ID: CP-0905
-        Historia: US-09
-        Escenario: Búsqueda combinada por palabra clave y ID de curso
-        Precondiciones:
-        - Un Recurso existe con titulo = "Recurso Reciente" y cursoId = 1.
-        - El 'recursoRepository.search()' está configurado para devolver
-          este recurso cuando se busca por 'keyword' Y 'cursoId'.
-        Datos de prueba:
-        - String keyword = "Reciente"
-        - Integer cursoId = 1
-        Pasos:
-        1. Simular recursoRepository.search("Reciente", 1, null, null, null, null, Sort.unsorted())
-           para que devuelva una lista de Object[] conteniendo 'recursoReciente'.
-        2. Ejecutar recursoService.searchRecursos("Reciente", 1, null, null, null, null, null).
-        Resultado esperado:
-        - Una Lista<RecursoResponse2DTO> con 1 elemento.
-        - El elemento debe ser el DTO de "Recurso Reciente".
-        Explicación del test;
-        GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
-               una lista simulada de 1 recurso cuando se llame
-               con la palabra clave "Reciente" Y el 'cursoId = 1'.
-        WHEN:  Ejecutamos el metodo searchRecursos.
-        THEN:  Verificamos que la lista devuelta no es nula, tiene 1
-               elemento y que el servicio llamó al repositorio 1 vez.
-        */
+            ID: CP-0905
+            Historia: US-09
+            Escenario: Búsqueda combinada por palabra clave y ID de curso
+            Precondiciones:
+            - Un Recurso existe con titulo = "Recurso Reciente" y cursoId = 1.
+            - El 'recursoRepository.search()' está configurado para devolver
+              este recurso cuando se busca por 'keyword' Y 'cursoId'.
+            Datos de prueba:
+            - String keyword = "Reciente"
+            - Integer cursoId = 1
+            Pasos:
+            1. Simular recursoRepository.search("Reciente", 1, null, null, null, null, Sort.unsorted())
+               para que devuelva una lista de Object[] conteniendo 'recursoReciente'.
+            2. Ejecutar recursoService.searchRecursos("Reciente", 1, null, null, null, null, null).
+            Resultado esperado:
+            - Una Lista<RecursoResponse2DTO> con 1 elemento.
+            - El elemento debe ser el DTO de "Recurso Reciente".
+            Explicación del test;
+            GIVEN: Configuramos 'recursoRepository.search()' para que devuelva
+                   una lista simulada de 1 recurso cuando se llame
+                   con la palabra clave "Reciente" Y el 'cursoId = 1'.
+            WHEN:  Ejecutamos el metodo searchRecursos.
+            THEN:  Verificamos que la lista devuelta no es nula, tiene 1
+                   elemento y que el servicio llamó al repositorio 1 vez.
+            */
         @Test
         @DisplayName("E - Debe buscar recursos por palabra clave y curso")
         void searchRecursos_whenKeywordAndCursoIdProvided_shouldReturnMatchingRecursos() {
@@ -758,7 +966,7 @@ public class RecursoServiceTest {
         Escenario busqueda con palabra clave y curso y tipo:
         DADO que me encuentro en el buscador de recursos
         CUANDO escribo una palabra clave, selecciono el tipo de recurso
-        y pongo el ID del curso y presiono en “Buscar”
+        y pongo el ID del curso y presiono en "Buscar"
         ENTONCES el sistema muestra los recursos que contengan la palabra clave
         y que coincidan con el tipo de recursos y curso solicitado.
 
@@ -830,7 +1038,7 @@ public class RecursoServiceTest {
         /*
         Escenario Busqueda con tipo inválido:
         DADO que me encuentro en el buscador de recursos
-        CUANDO escribo el tipo de recurso inválido presiono en “Buscar”
+        CUANDO escribo el tipo de recurso inválido presiono en "Buscar"
         ENTONCES el sistema muestra un mensaje de argumento incorrecto.
 
         ID: CP-0907
@@ -876,7 +1084,7 @@ public class RecursoServiceTest {
         /*
         Escenario Busqueda con mayúsculas y minúsculas:
         DADO que me encuentro en el buscador de recursos
-        CUANDO escribo la palabra clave con mayúsculas y presiono “Buscar”
+        CUANDO escribo la palabra clave con mayúsculas y presiono "Buscar"
         ENTONCES el sistema muestra el recurso sin importar las mayúsculas o minúsculas.
 
         ID: CP-0908
@@ -946,7 +1154,7 @@ public class RecursoServiceTest {
         /*
         Escenario filtros combinados:
         DADO que me encuentro en la sección de búsqueda avanzada
-        CUANDO ingreso la universidad y autor deseado y presiono en “Buscar”
+        CUANDO ingreso la universidad y autor deseado y presiono en "Buscar"
         ENTONCES el sistema solo muestra los recursos que cumplan con tales condiciones.
 
         ID: CP-1001
@@ -1015,7 +1223,7 @@ public class RecursoServiceTest {
     /*
     Escenario busqueda vacía:
     DADO que me encuentro en la sección de búsqueda avanzada
-    CUANDO presiono en “Buscar” sin filtros
+    CUANDO presiono en "Buscar" sin filtros
     ENTONCES el sistema muestra todos los resultados.
 
     ID: CP-1002
@@ -1081,7 +1289,7 @@ public class RecursoServiceTest {
         /*
         Escenario filtro por universidad
         DADO que me encuentro en la sección de búsqueda avanzada
-        CUANDO ingreso en la sección de universidad una universidad presiono en “Buscar”
+        CUANDO ingreso en la sección de universidad una universidad presiono en "Buscar"
         ENTONCES el sistema mostrará los recursos de la universidad.
 
         ID: CP-1003
@@ -1214,7 +1422,7 @@ public class RecursoServiceTest {
         }
 
         /*
-        Escenario Busqueda con ordenamiento base o “recientes”
+        Escenario Busqueda con ordenamiento base o "recientes"
         DADO que me encuentro en la sección de búsqueda avanzada
         CUANDO selecciono ordenamiento nada o recientes
         ENTONCES el sistema mostrará los recursos en orden según creación.
@@ -1281,7 +1489,7 @@ public class RecursoServiceTest {
         }
 
         /*
-        Escenario ordenamiento “Relevantes”
+        Escenario ordenamiento "Relevantes"
         DADO que me encuentro en la sección de búsqueda avanzada
         CUANDO selecciono ordenamiento relevantes
         ENTONCES el sistema mostrará los recursos en orden según valoración.
