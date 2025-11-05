@@ -16,12 +16,10 @@ import com.recolectaedu.model.Recurso;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.model.enums.Periodo;
 import com.recolectaedu.model.enums.Tipo_recurso;
-import com.recolectaedu.repository.ComentarioRepository;
 import com.recolectaedu.repository.CursoRepository;
 import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +44,7 @@ public class RecursoService {
     private final UsuarioRepository usuarioRepository;
     private final IAlmacenamientoService almacenamientoService;
     private final ResenaRepository resenaRepository;
-    private final ComentarioRepository comentarioRepository;
+    private final UsuarioService usuarioService;
 
     private RecursoResponseDTO toDto(Recurso r) {
         RecursoResponseDTO dto = new RecursoResponseDTO();
@@ -222,6 +220,9 @@ public class RecursoService {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
 
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+        validateOwnership(recurso, usuarioActual);
+
         Curso curso = validarYObtenerCurso(request.universidad(), request.carrera(), request.nombreCurso());
 
         recurso.setTitulo(request.titulo());
@@ -241,6 +242,9 @@ public class RecursoService {
     public RecursoResponseDTO actualizarParcial(Integer id_recurso, RecursoPartialUpdateRequestDTO request) {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+        validateOwnership(recurso, usuarioActual);
 
         // Si se quiere actualizar la clasificación, se deben proporcionar los tres campos.
         if (request.universidad() != null && request.carrera() != null && request.nombreCurso() != null) {
@@ -264,6 +268,10 @@ public class RecursoService {
     public void eliminar(Integer id_recurso) {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+        validateOwnership(recurso, usuarioActual);
+
         // Opcional: eliminar el archivo físico si el recurso es de tipo archivo
         if (recurso.getFormato() == com.recolectaedu.model.enums.FormatoRecurso.ARCHIVO) {
             almacenamientoService.eliminar(recurso.getContenido());
@@ -324,5 +332,11 @@ public class RecursoService {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
         return toDto(recurso);
+    }
+
+    private void validateOwnership(Recurso recurso, Usuario auth) {
+        if (auth == null || recurso.getUsuario() == null || !recurso.getUsuario().getId_usuario().equals(auth.getId_usuario())) {
+            throw new BusinessRuleException("No tienes permiso para operar sobre este recurso");
+        }
     }
 }
