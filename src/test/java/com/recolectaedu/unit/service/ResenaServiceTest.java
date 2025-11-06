@@ -119,12 +119,6 @@ public class ResenaServiceTest {
     /*
     US-13: Reseñar un recurso
      */
-    /*
-    Dado que estoy autenticado y en la página de un recurso válido,
-    y completo el formulario con contenido no vacío y un voto (positivo/negativo),
-    cuando presiono "Publicar",
-    entonces el sistema guarda la reseña asociada al recurso y a mi usuario.
-     */
     @Test
     @DisplayName("Reseña: debe crear reseña correctamente")
     void create_ValidData_Success() {
@@ -156,7 +150,7 @@ public class ResenaServiceTest {
     @Test
     @DisplayName("crearResena: falla si no autenticado")
     void crearResena_Unauthenticated_Throws() {
-        var req = new ResenaRequestCreateDTO(1, "Comentario", true);
+        ResenaRequestCreateDTO req = new ResenaRequestCreateDTO(1, "Comentario", true);
 
         when(usuarioService.getAuthenticatedUsuario())
                 .thenThrow(new IllegalStateException("No autenticado"));
