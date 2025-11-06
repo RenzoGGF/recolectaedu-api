@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -153,10 +154,10 @@ public class ResenaServiceTest {
         ResenaRequestCreateDTO req = new ResenaRequestCreateDTO(1, "Comentario", true);
 
         when(usuarioService.getAuthenticatedUsuario())
-                .thenThrow(new IllegalStateException("No autenticado"));
+                .thenThrow(new AccessDeniedException("No autenticado"));
 
         assertThatThrownBy(() -> resenaService.crearResena(req))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("No autenticado");
 
         verifyNoInteractions(recursoRepository, resenaRepository);
