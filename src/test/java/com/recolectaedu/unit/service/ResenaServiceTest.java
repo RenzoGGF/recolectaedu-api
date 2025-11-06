@@ -113,7 +113,6 @@ public class ResenaServiceTest {
     }
 
     private void setUpAuthenication(String email, Usuario usuario) {
-        SecurityContextHolder.setContext(securityContext);
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(usuario);
     }
 
@@ -165,7 +164,7 @@ public class ResenaServiceTest {
 
     // No se permiten varias reseñas al mismo recurso
     @Test
-    @DisplayName("Reseña: debe lanzar excepción al intentar crear reseña dupulicada")
+    @DisplayName("Reseña: debe lanzar excepción al intentar crear reseña duplicada")
     void create_DuplicateData_ThrowsException() {
         Integer recurso_id = 1;
         String comentario = "Comentario de prueba";
@@ -252,10 +251,9 @@ public class ResenaServiceTest {
         when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
         setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
 
-        resenaExistente.setEs_positivo(nuevoVoto);
-        resenaExistente.setActualizado_el(LocalDateTime.now());
+        Resena resenaGuardada = createResenaMock(resenaId, "Comentario original", nuevoVoto, mockUsuario, mockRecurso);
 
-        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaExistente);
+        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaGuardada);
 
         ResenaResponseDTO response = resenaService.actualizarParcialResena(resenaId, request);
 
@@ -275,6 +273,7 @@ public class ResenaServiceTest {
 
         when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
         Usuario otroUsuario = new Usuario();
+        otroUsuario.setId_usuario(2);
         setUpAuthenication(otroUsuario.getEmail(), otroUsuario);
 
         assertThatThrownBy(() -> resenaService.actualizarParcialResena(resenaId, request))
