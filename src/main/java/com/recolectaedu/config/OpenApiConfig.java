@@ -36,19 +36,22 @@ public class OpenApiConfig {
                 .title("RecolectaEdu")
                 .version("1.0.0")
                 .contact(contact)
-                .description("API REST para operaciones bancarias básicas desarrollada con Spring Boot 3.5.7 y Java 21.\n\n" +
-                        "## Características principales:\n" +
-                        "- Gestión completa de cuentas bancarias\n" +
-                        "- Procesamiento de transacciones (depósitos y retiros)\n" +
-                        "- Validaciones de negocio robustas\n" +
-                        "- Manejo global de excepciones\n" +
-                        "- API REST versionada (/api/v1)\n\n" +
-                        "## Tecnologías:\n" +
-                        "- **Java 21**\n" +
-                        "- **Spring Boot 3.5.7**\n" +
-                        "- **PostgreSQL** (Producción)\n" +
-                        "- **H2 Database** (Tests)\n" +
-                        "- **JUnit 5 & Mockito** (Testing)")
+                .description("""
+                        API REST para operaciones bancarias básicas desarrollada con Spring Boot 3.5.7 y Java 21.
+                        
+                        ## Características principales:
+                        - Gestión completa de cuentas bancarias
+                        - Procesamiento de transacciones (depósitos y retiros)
+                        - Validaciones de negocio robustas
+                        - Manejo global de excepciones
+                        - API REST versionada (/api/v1)
+                        
+                        ## Tecnologías:
+                        - **Java 21**
+                        - **Spring Boot 3.5.7**
+                        - **PostgreSQL** (Producción)
+                        - **H2 Database** (Tests)
+                        - **JUnit 5 & Mockito** (Testing)""")
                 .termsOfService("https://www.recolectaedu.com/terms")
                 .license(mitLicense);
 
