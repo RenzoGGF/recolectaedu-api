@@ -24,19 +24,19 @@ public class OpenApiConfig {
         prodServer.setDescription("Servidor de producción");
 
         Contact contact = new Contact();
-        contact.setName("Equipo Fintech API");
-        contact.setEmail("support@fintech.com");
-        contact.setUrl("https://www.fintech.com");
+        contact.setName("Equipo RecolectaEdu API");
+        contact.setEmail("support@recoletaedu.com");
+        contact.setUrl("https://www.recolectaedu.com");
 
         License mitLicense = new License()
                 .name("MIT License")
                 .url("https://choosealicense.com/licenses/mit/");
 
         Info info = new Info()
-                .title("Fintech API - Sistema Bancario")
+                .title("RecolectaEdu")
                 .version("1.0.0")
                 .contact(contact)
-                .description("API REST para operaciones bancarias básicas desarrollada con Spring Boot 3.5.6 y Java 21.\n\n" +
+                .description("API REST para operaciones bancarias básicas desarrollada con Spring Boot 3.5.7 y Java 21.\n\n" +
                         "## Características principales:\n" +
                         "- Gestión completa de cuentas bancarias\n" +
                         "- Procesamiento de transacciones (depósitos y retiros)\n" +
@@ -45,11 +45,11 @@ public class OpenApiConfig {
                         "- API REST versionada (/api/v1)\n\n" +
                         "## Tecnologías:\n" +
                         "- **Java 21**\n" +
-                        "- **Spring Boot 3.5.6**\n" +
+                        "- **Spring Boot 3.5.7**\n" +
                         "- **PostgreSQL** (Producción)\n" +
                         "- **H2 Database** (Tests)\n" +
                         "- **JUnit 5 & Mockito** (Testing)")
-                .termsOfService("https://www.fintech.com/terms")
+                .termsOfService("https://www.recolectaedu.com/terms")
                 .license(mitLicense);
 
         return new OpenAPI()
