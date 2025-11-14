@@ -2,7 +2,6 @@ package com.recolectaedu.repository;
 
 import com.recolectaedu.dto.response.CursoRankingAportesDTO;
 import com.recolectaedu.dto.response.CursoResponse2DTO;
-import com.recolectaedu.dto.response.CursoResponseDTO;
 import com.recolectaedu.model.Curso;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +33,14 @@ public interface CursoRepository extends JpaRepository<Curso, Integer> {
             "AND (:carrera IS NULL OR c.carrera = :carrera) " +
             "GROUP BY c.id_curso, c.nombre, c.universidad, c.carrera " +
             "ORDER BY (COUNT(DISTINCT r.id_recurso) + COUNT(DISTINCT res.id_resena)) DESC, c.nombre ASC")
-    Page<CursoRankingAportesDTO> rankingPorAportes(@Param("universidad") String universidad, @Param("carrera") String carrera, Pageable pageable);Optional<Curso> findByUniversidadAndCarreraAndNombre(String universidad, String carrera, String nombre);
+    Page<CursoRankingAportesDTO> rankingPorAportes(@Param("universidad") String universidad, @Param("carrera") String carrera, Pageable pageable);
+    Optional<Curso> findByUniversidadAndCarreraAndNombre(String universidad, String carrera, String nombre);
+
+    @Query("SELECT new com.recolectaedu.dto.response.CursoResponse2DTO(" +
+            "c.id_curso, c.universidad, c.nombre, c.carrera, COUNT(r)) " +
+            "FROM Curso c LEFT JOIN Recurso r ON c = r.curso " +
+            "WHERE c.id_curso = :idCurso " +
+            "GROUP BY c.id_curso, c.universidad, c.nombre, c.carrera")
+    Optional<CursoResponse2DTO> findCursoDetailsById(@Param("idCurso") Integer idCurso);
 
 }

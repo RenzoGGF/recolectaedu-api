@@ -81,8 +81,10 @@ public class RecursoService {
                 recurso.getCreado_el(),
                 recurso.getUsuario() != null ? recurso.getUsuario().getId_usuario() : null,
                 recurso.getCurso() != null ? recurso.getCurso().getId_curso() : null,
-                autorNombre
-        );
+                autorNombre,
+                recurso.getCurso() !=null ? recurso.getCurso().getNombre() : null,
+                recurso.getCurso() !=null ? recurso.getCurso().getUniversidad() : null
+                );
     }
 
     private Periodo mapPeriodoOrdinal(Integer ordinal) {

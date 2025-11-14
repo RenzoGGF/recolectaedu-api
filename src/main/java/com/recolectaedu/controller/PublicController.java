@@ -59,6 +59,12 @@ public class PublicController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/cursos/{id}")
+    public ResponseEntity<CursoResponse2DTO> getCursoById(@PathVariable("id") Integer id) {
+        CursoResponse2DTO response = cursoService.getCursoById_curso(id);
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/recursos/curso/{id_curso}/mas-valorados")
     public ResponseEntity<List<RecursoValoradoResponseDTO>> obtenerMasValoradosPorCurso(
             @PathVariable("id_curso") Integer id_curso
