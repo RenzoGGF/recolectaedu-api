@@ -4,6 +4,7 @@ import com.recolectaedu.dto.response.CursoRankingAportesDTO;
 import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.dto.response.CursoResponseDTO;
 import com.recolectaedu.repository.CursoRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +28,12 @@ public class CursoService {
         String universidadParam = StringUtils.hasText(universidad) ? universidad : null;
         String carreraParam = StringUtils.hasText(carrera) ? carrera : null;
         return cursoRepository.rankingPorAportes(universidadParam, carreraParam, pageable);
+    }
+
+    //Curso en específico
+    public CursoResponse2DTO getCursoById_curso(Integer id_curso) {
+        return cursoRepository.findCursoDetailsById(id_curso)
+                .orElseThrow(() -> new EntityNotFoundException("Curso no encontrado con id: " + id_curso));
     }
 
 }
