@@ -3,10 +3,7 @@ package com.recolectaedu.controller;
 import com.recolectaedu.dto.request.UserRequestDTO;
 import com.recolectaedu.dto.response.*;
 import com.recolectaedu.model.enums.OrdenRecurso;
-import com.recolectaedu.service.CursoService;
-import com.recolectaedu.service.RecursoService;
-import com.recolectaedu.service.UsuarioService;
-import com.recolectaedu.service.ResenaService;
+import com.recolectaedu.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -27,7 +24,7 @@ public class PublicController {
     private final CursoService cursoService;
     private final UsuarioService usuarioService;
     private final ResenaService resenaService;
-
+    private final ForoService foroService;
     // Endpoint para US-12
     @GetMapping("/recursos/curso/{cursoId}/recientes")
     public ResponseEntity<List<RecursoResponse2DTO>> findRecientesByCurso(@PathVariable Integer cursoId) {
@@ -108,6 +105,18 @@ public class PublicController {
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<CursoRankingAportesDTO> response = cursoService.getRankingAportes(universidad, carrera, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/foros")
+    public ResponseEntity<List<ForoResponseDTO>> getAllForos() {
+        List<ForoResponseDTO> response = foroService.listarTodosLosForos();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/foros/{id}")
+    public ResponseEntity<ForoResponseDTO> getForoById(@PathVariable("id") Integer id) {
+        ForoResponseDTO response = foroService.getForoById(id);
         return ResponseEntity.ok(response);
     }
 }
