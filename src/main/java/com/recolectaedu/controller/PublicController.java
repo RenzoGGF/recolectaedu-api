@@ -125,4 +125,10 @@ public class PublicController {
             Integer id_recurso) {
         return ResponseEntity.ok(recursoService.obtenerPorId(id_recurso));
     }
+
+    @GetMapping("/universidades/ranking-recursos")
+    public ResponseEntity<List<UniversidadRankingRecursosDTO>> getRankingUniversidades() {
+        List<UniversidadRankingRecursosDTO> response = cursoService.getRankingUniversidadesPorRecursos();
+        return ResponseEntity.ok(response);
+    }
 }

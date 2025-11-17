@@ -3,6 +3,7 @@ package com.recolectaedu.service;
 import com.recolectaedu.dto.response.CursoRankingAportesDTO;
 import com.recolectaedu.dto.response.CursoResponse2DTO;
 import com.recolectaedu.dto.response.CursoResponseDTO;
+import com.recolectaedu.dto.response.UniversidadRankingRecursosDTO;
 import com.recolectaedu.repository.CursoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,10 @@ public class CursoService {
     public CursoResponse2DTO getCursoById_curso(Integer id_curso) {
         return cursoRepository.findCursoDetailsById(id_curso)
                 .orElseThrow(() -> new EntityNotFoundException("Curso no encontrado con id: " + id_curso));
+    }
+
+    public List<UniversidadRankingRecursosDTO> getRankingUniversidadesPorRecursos() {
+        return cursoRepository.findRankingUniversidadesPorRecursos();
     }
 
 }

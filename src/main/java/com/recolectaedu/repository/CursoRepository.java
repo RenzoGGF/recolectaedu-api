@@ -2,6 +2,7 @@ package com.recolectaedu.repository;
 
 import com.recolectaedu.dto.response.CursoRankingAportesDTO;
 import com.recolectaedu.dto.response.CursoResponse2DTO;
+import com.recolectaedu.dto.response.UniversidadRankingRecursosDTO;
 import com.recolectaedu.model.Curso;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,5 +43,12 @@ public interface CursoRepository extends JpaRepository<Curso, Integer> {
             "WHERE c.id_curso = :idCurso " +
             "GROUP BY c.id_curso, c.universidad, c.nombre, c.carrera")
     Optional<CursoResponse2DTO> findCursoDetailsById(@Param("idCurso") Integer idCurso);
+
+    @Query("SELECT new com.recolectaedu.dto.response.UniversidadRankingRecursosDTO(" +
+            "c.universidad, COUNT(r.id_recurso)) " +
+            "FROM Recurso r JOIN r.curso c " +
+            "GROUP BY c.universidad " +
+            "ORDER BY COUNT(r.id_recurso) DESC")
+    List<UniversidadRankingRecursosDTO> findRankingUniversidadesPorRecursos();
 
 }
