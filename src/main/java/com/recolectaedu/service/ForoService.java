@@ -35,7 +35,8 @@ public class ForoService {
                 foroGuardado.getCreado_el(),
                 foroGuardado.getUsuario().getId_usuario(),
                 foroGuardado.getUsuario().getPerfil().getNombre(),
-                foroGuardado.getUsuario().getPerfil().getApellidos()
+                foroGuardado.getUsuario().getPerfil().getApellidos(),
+                foroGuardado.getUsuario().getEmail()
         );
     }
 

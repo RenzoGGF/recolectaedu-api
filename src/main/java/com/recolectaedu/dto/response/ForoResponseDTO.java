@@ -9,6 +9,7 @@ public record ForoResponseDTO(
         LocalDateTime creado_el,
         Integer id_usuario,
         String nombre,
-        String apellido
+        String apellido,
+        String emailAutor
 ) {
 }
