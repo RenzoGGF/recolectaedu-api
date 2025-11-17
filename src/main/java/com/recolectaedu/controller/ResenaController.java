@@ -5,25 +5,25 @@ import com.recolectaedu.dto.request.ResenaRequestPartialUpdateDTO;
 import com.recolectaedu.dto.request.ResenaRequestUpdateDTO;
 import com.recolectaedu.dto.response.ResenaResponseDTO;
 import com.recolectaedu.service.ResenaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
 
+@Tag(name = "Resena", description = "API de Resenas")
 @RestController
 @RequestMapping("/resenas")
 @RequiredArgsConstructor
-@PreAuthorize("isAuthenticated()")
 public class ResenaController {
 
     private final ResenaService resenaService;
 
+    @Operation(summary = "Crear una resena")
     @PostMapping
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResenaResponseDTO> crearResena(
             @Valid @RequestBody ResenaRequestCreateDTO request
     ) {
@@ -32,7 +32,6 @@ public class ResenaController {
     }
 
     @PutMapping("/{id_resena}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResenaResponseDTO> actualizarResena(
             @PathVariable Integer id_resena,
             @Valid @RequestBody ResenaRequestUpdateDTO request
@@ -41,7 +40,6 @@ public class ResenaController {
     }
 
     @PatchMapping("/{id_resena}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ResenaResponseDTO> actualizarParcialResena(
             @PathVariable Integer id_resena,
             @Valid @RequestBody ResenaRequestPartialUpdateDTO request
@@ -51,7 +49,6 @@ public class ResenaController {
 
 
     @DeleteMapping("/{id_resena}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> eliminarResena(
             @PathVariable Integer id_resena
     ) {

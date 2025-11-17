@@ -39,13 +39,6 @@ public class RecursoController {
         return ResponseEntity.created(URI.create("/recursos/" + creado.getId_recurso())).body(creado);
     }
 
-    @GetMapping("/{id_recurso}")
-    public ResponseEntity<RecursoResponseDTO> obtener(
-            @PathVariable
-            Integer id_recurso) {
-        return ResponseEntity.ok(recursoService.obtenerPorId(id_recurso));
-    }
-
     @PutMapping("/{id_recurso}")
     public ResponseEntity<RecursoResponseDTO> actualizar(
             @PathVariable Integer id_recurso,

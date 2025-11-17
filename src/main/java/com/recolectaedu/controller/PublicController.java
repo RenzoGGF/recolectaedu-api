@@ -119,4 +119,10 @@ public class PublicController {
         ForoResponseDTO response = foroService.getForoById(id);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/recursos/{id_recurso}")
+    public ResponseEntity<RecursoResponseDTO> obtener(
+            @PathVariable
+            Integer id_recurso) {
+        return ResponseEntity.ok(recursoService.obtenerPorId(id_recurso));
+    }
 }
