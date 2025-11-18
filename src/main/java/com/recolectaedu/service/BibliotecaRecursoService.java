@@ -30,6 +30,7 @@ public class BibliotecaRecursoService {
         return BibliotecaRecursoResponseDTO.builder()
                 .id_biblioteca_recurso(bibliotecaRecurso.getId_biblioteca_recurso())
                 .titulo_recurso(bibliotecaRecurso.getRecurso().getTitulo())
+                .id_recurso(bibliotecaRecurso.getRecurso().getId_recurso())
                 .agregado_el(bibliotecaRecurso.getAgregado_el())
                 .build();
     }
