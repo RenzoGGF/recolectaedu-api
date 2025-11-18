@@ -143,6 +143,14 @@ public class UsuarioService {
                 .build();
     }
 
+    // GET /usuarios/me - perfil del usuario autenticado | NUEVO, PARA LOS DATOS AL FRONT
+    @Transactional(readOnly = true)
+    public UserResponseDTO obtenerUsuarioActualDTO() {
+        Usuario auth = getAuthenticatedUsuario(); // usa el email del token
+        return toDTO(auth);
+    }
+
+
     private UserResponseDTO toDTO(Usuario u) {
         return new UserResponseDTO(
                 u.getId_usuario(),
