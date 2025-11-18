@@ -3,6 +3,7 @@ package com.recolectaedu.unit.service;
 import com.recolectaedu.dto.request.ForoRequestDTO;
 import com.recolectaedu.dto.response.ForoResponseDTO;
 import com.recolectaedu.model.Foro;
+import com.recolectaedu.model.Perfil;
 import com.recolectaedu.model.Usuario;
 import com.recolectaedu.repository.ForoRepository;
 import com.recolectaedu.service.ForoService;
@@ -49,10 +50,16 @@ public class ForoServiceTest {
     @BeforeEach
     void setUp() {
         tiempoPrueba = LocalDateTime.now();
+        Perfil perfilMock = Perfil.builder()
+                .nombre("Nombre de prueba")
+                .apellidos("Apellido de prueba")
+                .build();
+
         usuarioMock = Usuario.builder()
                 .id_usuario(1)
                 .email("test@usuario.com")
                 .password_hash("hash123")
+                .perfil(perfilMock)           // <--- importante
                 .build();
 
         requestDTO = new ForoRequestDTO(
