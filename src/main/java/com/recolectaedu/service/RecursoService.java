@@ -21,6 +21,7 @@ import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -241,6 +242,43 @@ public class RecursoService {
     }
 
     @Transactional
+    public RecursoResponseDTO actualizarDesdeArchivo(Integer id_recurso, MultipartFile archivo, RecursoArchivoCreateRequestDTO request) {
+        Recurso recurso = recursoRepository.findById(id_recurso)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        Usuario usuarioActual = usuarioService.getAuthenticatedUsuario();
+        validateOwnership(recurso, usuarioActual);
+
+        String nuevoNombreArchivo = almacenamientoService.almacenar(archivo);
+
+        // Buscando el nombre del archivo antiguo
+        String nombreArchivoAntiguo = recurso.getContenido();
+        boolean teniaArchivoPrevio = (recurso.getFormato() == com.recolectaedu.model.enums.FormatoRecurso.ARCHIVO);
+
+        Curso curso = validarYObtenerCurso(request.universidad(), request.carrera(), request.nombreCurso());
+
+        recurso.setTitulo(request.titulo());
+        recurso.setDescripcion(request.descripcion());
+        recurso.setContenido(nuevoNombreArchivo);
+        recurso.setFormato(request.formato());
+        recurso.setTipo(request.tipo());
+        recurso.setAno(request.ano());
+        recurso.setPeriodo(mapPeriodoOrdinal(request.periodo()));
+        recurso.setCurso(curso);
+        recurso.setActualizado_el(LocalDateTime.now());
+
+        if (teniaArchivoPrevio && nombreArchivoAntiguo != null) {
+            try {
+                almacenamientoService.eliminar(nombreArchivoAntiguo);
+            } catch (Exception e) {
+                System.err.println("Advertencia: No se pudo eliminar el archivo huérfano: " + nombreArchivoAntiguo);
+            }
+        }
+
+        return toDto(recursoRepository.save(recurso));
+    }
+
+    @Transactional
     public RecursoResponseDTO actualizarParcial(Integer id_recurso, RecursoPartialUpdateRequestDTO request) {
         Recurso recurso = recursoRepository.findById(id_recurso)
                 .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
@@ -340,5 +378,17 @@ public class RecursoService {
         if (auth == null || recurso.getUsuario() == null || !recurso.getUsuario().getId_usuario().equals(auth.getId_usuario())) {
             throw new BusinessRuleException("No tienes permiso para operar sobre este recurso");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Resource obtenerArchivo(Integer id_recurso) {
+        Recurso recurso = recursoRepository.findById(id_recurso)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        if (recurso.getFormato() != com.recolectaedu.model.enums.FormatoRecurso.ARCHIVO) {
+            throw new BusinessRuleException("Este recurso no tiene un archivo adjunto (es de tipo " + recurso.getFormato() + ")");
+        }
+
+        return almacenamientoService.cargarComoRecurso(recurso.getContenido());
     }
 }

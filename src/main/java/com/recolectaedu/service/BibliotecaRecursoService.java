@@ -105,4 +105,9 @@ public class BibliotecaRecursoService {
             throw new BusinessRuleException("No autorizado para operar sobre esta biblioteca");
         }
     }
+
+    @Transactional(readOnly = true)
+    public boolean verificarRecursoEnBiblioteca(Integer idBiblioteca, Integer idRecurso) {
+        return bibliotecaRecursoRepository.existsByBiblioteca_Id_bibliotecaAndRecurso_Id_recurso(idBiblioteca, idRecurso);
+    }
 }
