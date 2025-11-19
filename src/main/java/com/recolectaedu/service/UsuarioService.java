@@ -96,6 +96,13 @@ public class UsuarioService {
         return toDTO(saved);
     }
 
+    // DELETE actual
+    @Transactional
+    public void eliminarUsuarioActual() {
+        Usuario auth = getAuthenticatedUsuario();
+        usuarioRepository.deleteById(auth.getId_usuario());
+    }
+
     // DELETE
     @Transactional
     public void eliminarUsuario(Integer id) {
