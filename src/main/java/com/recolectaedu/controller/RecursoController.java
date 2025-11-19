@@ -9,6 +9,8 @@ import com.recolectaedu.service.RecursoService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -71,5 +73,20 @@ public class RecursoController {
     ) {
         recursoService.eliminar(id_recurso);
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Descargar archivo asociado al recurso")
+    @GetMapping("/{id_recurso}/archivo")
+    public ResponseEntity<Resource> descargarArchivo(
+            @PathVariable Integer id_recurso
+    ) {
+        Resource archivo = recursoService.obtenerArchivo(id_recurso);
+
+        String contentType = "application/octet-stream"; // Tipo genérico binario
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(contentType))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + archivo.getFilename() + "\"")
+                .body(archivo);
     }
 }

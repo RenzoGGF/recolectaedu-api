@@ -2,7 +2,6 @@ package com.recolectaedu.service;
 
 import com.recolectaedu.dto.request.RecursoArchivoCreateRequestDTO;
 import com.recolectaedu.dto.request.RecursoCreateRequestDTO;
-import com.recolectaedu.model.enums.FormatoRecurso;
 import com.recolectaedu.model.enums.OrdenRecurso;
 import com.recolectaedu.dto.request.RecursoPartialUpdateRequestDTO;
 import com.recolectaedu.dto.request.RecursoUpdateRequestDTO;
@@ -22,6 +21,7 @@ import com.recolectaedu.repository.RecursoRepository;
 import com.recolectaedu.repository.ResenaRepository;
 import com.recolectaedu.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -378,5 +378,17 @@ public class RecursoService {
         if (auth == null || recurso.getUsuario() == null || !recurso.getUsuario().getId_usuario().equals(auth.getId_usuario())) {
             throw new BusinessRuleException("No tienes permiso para operar sobre este recurso");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public Resource obtenerArchivo(Integer id_recurso) {
+        Recurso recurso = recursoRepository.findById(id_recurso)
+                .orElseThrow(() -> new ResourceNotFoundException("Recurso no encontrado"));
+
+        if (recurso.getFormato() != com.recolectaedu.model.enums.FormatoRecurso.ARCHIVO) {
+            throw new BusinessRuleException("Este recurso no tiene un archivo adjunto (es de tipo " + recurso.getFormato() + ")");
+        }
+
+        return almacenamientoService.cargarComoRecurso(recurso.getContenido());
     }
 }
