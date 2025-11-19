@@ -56,6 +56,14 @@ public class UsuarioController {
         return ResponseEntity.ok(resp);
     }
 
+    //DELETE usuario actual
+    @DeleteMapping("/me")
+    public ResponseEntity<Void> deleteCurrentUser() {
+        usuarioService.eliminarUsuarioActual();
+        return ResponseEntity.noContent().build();
+    }
+
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
         usuarioService.eliminarUsuario(id);
