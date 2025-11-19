@@ -5,6 +5,8 @@ import com.recolectaedu.dto.request.ResenaRequestPartialUpdateDTO;
 import com.recolectaedu.dto.request.ResenaRequestUpdateDTO;
 import com.recolectaedu.dto.response.ResenaResponseDTO;
 import com.recolectaedu.service.ResenaService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
 
+@Tag(name = "Resena", description = "API de Resenas")
 @RestController
 @RequestMapping("/resenas")
 @RequiredArgsConstructor
@@ -19,6 +22,7 @@ public class ResenaController {
 
     private final ResenaService resenaService;
 
+    @Operation(summary = "Crear una resena")
     @PostMapping
     public ResponseEntity<ResenaResponseDTO> crearResena(
             @Valid @RequestBody ResenaRequestCreateDTO request

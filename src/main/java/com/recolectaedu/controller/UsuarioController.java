@@ -34,6 +34,14 @@ public class UsuarioController {
 //        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
 //    }
 
+    // GET /api/v1/usuarios/me | NUEVO, DATOS PARA EL FRONT
+    @GetMapping(value = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponseDTO> getCurrentUser() {
+        var resp = usuarioService.obtenerUsuarioActualDTO();
+        return ResponseEntity.ok(resp);
+    }
+
+
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UserResponseDTO> getById(@PathVariable Integer id) {
         var resp = usuarioService.obtenerUsuarioPorIdDTO(id);

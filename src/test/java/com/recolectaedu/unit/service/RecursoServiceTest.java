@@ -43,6 +43,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.recolectaedu.model.enums.FormatoRecurso.TEXTO;
+import static com.recolectaedu.model.enums.Tipo_recurso.Apuntes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -61,7 +63,7 @@ import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Pruebas unitarias de Recurso Service")
-public class RecursoServiceTest {
+public class    RecursoServiceTest {
     @Mock
     private RecursoRepository recursoRepository;
 
@@ -108,7 +110,7 @@ public class RecursoServiceTest {
                 .creado_el(LocalDateTime.now())
                 .usuario(usuarioMock)
                 .curso(cursoMock)
-                .tipo(Tipo_recurso.Apuntes) //
+                .tipo(Apuntes) //
                 .formato(FormatoRecurso.ARCHIVO)
                 .build();
 
@@ -119,7 +121,7 @@ public class RecursoServiceTest {
                 .usuario(usuarioMock)
                 .curso(cursoMock)
                 .tipo(Tipo_recurso.Ejercicios) //
-                .formato(FormatoRecurso.TEXTO)
+                .formato(TEXTO)
                 .build();
     }
 
@@ -158,7 +160,7 @@ public class RecursoServiceTest {
 
             RecursoArchivoCreateRequestDTO request = new RecursoArchivoCreateRequestDTO(
                     userId, university, career, courseName,
-                    "Resumen de Cálculo I", "Resumen completo", FormatoRecurso.ARCHIVO, Tipo_recurso.Apuntes,
+                    "Resumen de Cálculo I", "Resumen completo", FormatoRecurso.ARCHIVO, Apuntes,
                     2024, 1
             );
             MultipartFile mockFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[5 * 1024 * 1024]);
@@ -197,7 +199,7 @@ public class RecursoServiceTest {
 
             RecursoArchivoCreateRequestDTO request = new RecursoArchivoCreateRequestDTO(
                     userId, university, career, courseName,
-                    "Libro de Algoritmos", "Libro completo", FormatoRecurso.ARCHIVO, Tipo_recurso.Apuntes,
+                    "Libro de Algoritmos", "Libro completo", FormatoRecurso.ARCHIVO, Apuntes,
                     2024, 1
             );
             MultipartFile mockFile = new MockMultipartFile("file", "test.pdf", "application/pdf", new byte[15 * 1024 * 1024]);
@@ -272,7 +274,7 @@ public class RecursoServiceTest {
                     1. Derivada de x^n = nx^(n-1)
                     2. Derivada de e^x = e^x
                     3. Derivada de ln(x) = 1/x
-                    """, FormatoRecurso.TEXTO, Tipo_recurso.Apuntes,
+                    """, TEXTO, Apuntes,
                     2024, 1
             );
 
@@ -291,7 +293,7 @@ public class RecursoServiceTest {
             assertThat(response).isNotNull();
             assertThat(response.getId_recurso()).isEqualTo(3);
             assertThat(response.getContenido()).isEqualTo(request.contenido());
-            assertThat(response.getFormato()).isEqualTo(FormatoRecurso.TEXTO);
+            assertThat(response.getFormato()).isEqualTo(TEXTO);
 
             verify(recursoRepository).save(any(Recurso.class));
         }
@@ -307,7 +309,7 @@ public class RecursoServiceTest {
 
             RecursoArchivoCreateRequestDTO request = new RecursoArchivoCreateRequestDTO(
                     userId, university, career, courseName,
-                    "Archivo corrupto", "Descripción", FormatoRecurso.ARCHIVO, Tipo_recurso.Apuntes,
+                    "Archivo corrupto", "Descripción", FormatoRecurso.ARCHIVO, Apuntes,
                     2024, 1
             );
             MultipartFile mockFile = new MockMultipartFile("file", "corrupt.pdf", "application/pdf", new byte[0]);
@@ -359,7 +361,7 @@ public class RecursoServiceTest {
             Integer userId = 1;
             LocalDateTime now = LocalDateTime.now();
 
-            AporteListadoResponseDTO aporte1 = new AporteListadoResponseDTO(1, "Resumen de Cálculo I", Tipo_recurso.Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(5), now.minusDays(5));
+            AporteListadoResponseDTO aporte1 = new AporteListadoResponseDTO(1, "Resumen de Cálculo I", Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(5), now.minusDays(5));
             AporteListadoResponseDTO aporte2 = new AporteListadoResponseDTO(2, "Tutorial de Spring Boot", Tipo_recurso.Practicas, 1, "Cálculo I", "UNMSM", now.minusDays(2), now.minusDays(2));
             AporteListadoResponseDTO aporte3 = new AporteListadoResponseDTO(3, "Fórmulas de Derivadas", Tipo_recurso.Ejercicios, 1, "Cálculo I", "UNMSM", now, now);
 
@@ -430,12 +432,12 @@ public class RecursoServiceTest {
             String filterType = "Apuntes";
             LocalDateTime now = LocalDateTime.now();
 
-            AporteListadoResponseDTO aporte1 = new AporteListadoResponseDTO(1, "Resumen de Cálculo I", Tipo_recurso.Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(3), now.minusDays(3));
-            AporteListadoResponseDTO aporte2 = new AporteListadoResponseDTO(2, "Guía de Programación", Tipo_recurso.Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(1), now.minusDays(1));
+            AporteListadoResponseDTO aporte1 = new AporteListadoResponseDTO(1, "Resumen de Cálculo I", Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(3), now.minusDays(3));
+            AporteListadoResponseDTO aporte2 = new AporteListadoResponseDTO(2, "Guía de Programación", Apuntes, 1, "Cálculo I", "UNMSM", now.minusDays(1), now.minusDays(1));
             List<AporteListadoResponseDTO> apuntesAportes = Arrays.asList(aporte2, aporte1);
 
             when(usuarioRepository.existsById(userId)).thenReturn(true);
-            when(recursoRepository.findAportesByUsuario(eq(userId), any(), eq(Tipo_recurso.Apuntes), any(Pageable.class)))
+            when(recursoRepository.findAportesByUsuario(eq(userId), any(), eq(Apuntes), any(Pageable.class)))
                     .thenReturn(new PageImpl<>(apuntesAportes));
 
             mockResourceCounters(1, 0L, 0L, 0L);
@@ -447,7 +449,7 @@ public class RecursoServiceTest {
             // Assert
             assertThat(response).isNotNull();
             assertThat(response.getContent()).hasSize(2);
-            assertThat(response.getContent()).allMatch(r -> r.getTipo() == Tipo_recurso.Apuntes);
+            assertThat(response.getContent()).allMatch(r -> r.getTipo() == Apuntes);
             assertThat(response.getContent().get(0).getTitulo()).isEqualTo("Guía de Programación");
             assertThat(response.getContent().get(1).getTitulo()).isEqualTo("Resumen de Cálculo I");
 
@@ -733,7 +735,7 @@ public class RecursoServiceTest {
         void searchRecursos_whenTipoProvided_shouldReturnMatchingRecursos() {
             // GIVEN
             String tipoString = "Apuntes";
-            Tipo_recurso tipoEnum = Tipo_recurso.Apuntes;
+            Tipo_recurso tipoEnum = Apuntes;
 
             Object[] repoResult = new Object[]{ recursoReciente, 1L };
             List<Object[]> mockResultList = Collections.singletonList(repoResult);
@@ -863,7 +865,7 @@ public class RecursoServiceTest {
             // GIVEN
             String keyword = "Reciente";
             String tipoString = "Apuntes";
-            Tipo_recurso tipoEnum = Tipo_recurso.Apuntes; //
+            Tipo_recurso tipoEnum = Apuntes; //
 
             Object[] repoResult = new Object[]{ recursoReciente, 1L }; // Recurso y score
             List<Object[]> singletonList = Collections.singletonList(repoResult);
@@ -1003,7 +1005,7 @@ public class RecursoServiceTest {
             String keyword = "Reciente";
             Integer cursoId = 1;
             String tipoString = "Apuntes";
-            Tipo_recurso tipoEnum = Tipo_recurso.Apuntes;
+            Tipo_recurso tipoEnum = Apuntes;
 
             Object[] repoResult = new Object[]{ recursoReciente, 1L };
             List<Object[]> mockResultList = new java.util.ArrayList<>(Collections.singletonList(repoResult));
@@ -1570,7 +1572,7 @@ public class RecursoServiceTest {
         when(recursoRepository.findMasValoradosPorCursoConMetricas(cursoId))
                 .thenReturn(List.of(dto1, dto2));
 
-        var result = recursoService.obtenerRecursosMasValoradosPorCurso(cursoId);
+        List<RecursoValoradoResponseDTO> result = recursoService.obtenerRecursosMasValoradosPorCurso(cursoId);
 
         assertThat(result).hasSize(2);
         assertThat(result.get(0).id_recurso()).isEqualTo(1);
@@ -1611,7 +1613,7 @@ public class RecursoServiceTest {
     @DisplayName("actualizar: éxito cuando el autor coincide")
     void actualizar_Success_WhenOwner() {
         Usuario autor = new Usuario(); autor.setId_usuario(1);
-        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(TEXTO).build();
 
         when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(autor); // <- autenticado = autor
@@ -1622,13 +1624,17 @@ public class RecursoServiceTest {
         RecursoUpdateRequestDTO req = RecursoUpdateRequestDTO.builder()
                 .universidad("UNI").carrera("SIS").nombreCurso("ALG")
                 .titulo("T").descripcion("D").contenido("C")
-                .formato(FormatoRecurso.TEXTO)
-                .tipo(com.recolectaedu.model.enums.Tipo_recurso.Apuntes)
+                .formato(TEXTO)
+                .tipo(Apuntes)
                 .ano(2024).periodo(1).build();
 
         RecursoResponseDTO resp = recursoService.actualizar(100, req);
 
         assertThat(resp).isNotNull();
+        assertThat(resp.getTitulo()).isEqualTo("T");
+        assertThat(resp.getDescripcion()).isEqualTo("D");
+        assertThat(resp.getContenido()).isEqualTo("C");
+        assertThat(resp.getFormato()).isEqualTo(TEXTO);
         verify(recursoRepository).findById(100);
         verify(usuarioService).getAuthenticatedUsuario();
         verify(cursoRepository).findByUniversidadAndCarreraAndNombre("UNI","SIS","ALG");
@@ -1641,7 +1647,7 @@ public class RecursoServiceTest {
     void actualizar_InvalidOwnership_Throws() {
         Usuario autor = new Usuario(); autor.setId_usuario(1);
         Usuario otro = new Usuario();  otro.setId_usuario(2);
-        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(TEXTO).build();
 
         when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(otro);
@@ -1649,8 +1655,8 @@ public class RecursoServiceTest {
         RecursoUpdateRequestDTO req = RecursoUpdateRequestDTO.builder()
                 .universidad("UNI").carrera("SIS").nombreCurso("ALG")
                 .titulo("T").descripcion("D").contenido("C")
-                .formato(FormatoRecurso.TEXTO)
-                .tipo(com.recolectaedu.model.enums.Tipo_recurso.Apuntes)
+                .formato(TEXTO)
+                .tipo(Apuntes)
                 .ano(2024).periodo(1).build();
 
         assertThatThrownBy(() -> recursoService.actualizar(100, req))
@@ -1665,15 +1671,15 @@ public class RecursoServiceTest {
     @DisplayName("actualizar: falla si no autenticado")
     void actualizar_Unauthenticated_Throws() {
         when(recursoRepository.findById(100)).thenReturn(Optional.of(
-                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(FormatoRecurso.TEXTO).build()
+                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(TEXTO).build()
         ));
         when(usuarioService.getAuthenticatedUsuario()).thenThrow(new IllegalStateException("No autenticado"));
 
         RecursoUpdateRequestDTO req = RecursoUpdateRequestDTO.builder()
                 .universidad("UNI").carrera("SIS").nombreCurso("ALG")
                 .titulo("T").descripcion("D").contenido("C")
-                .formato(FormatoRecurso.TEXTO)
-                .tipo(com.recolectaedu.model.enums.Tipo_recurso.Apuntes)
+                .formato(TEXTO)
+                .tipo(Apuntes)
                 .ano(2024).periodo(1).build();
 
         assertThatThrownBy(() -> recursoService.actualizar(100, req))
@@ -1687,7 +1693,7 @@ public class RecursoServiceTest {
     @DisplayName("actualizarParcial: éxito cuando el autor coincide")
     void actualizarParcial_Success_WhenOwner() {
         Usuario autor = new Usuario(); autor.setId_usuario(1);
-        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(TEXTO).build();
 
         when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(autor);
@@ -1708,7 +1714,7 @@ public class RecursoServiceTest {
     void actualizarParcial_InvalidOwnership_Throws() {
         Usuario autor = new Usuario(); autor.setId_usuario(1);
         Usuario otro = new Usuario();  otro.setId_usuario(2);
-        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(TEXTO).build();
 
         when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(otro);
@@ -1727,7 +1733,7 @@ public class RecursoServiceTest {
     @DisplayName("actualizarParcial: falla si no autenticado")
     void actualizarParcial_Unauthenticated_Throws() {
         when(recursoRepository.findById(100)).thenReturn(Optional.of(
-                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(FormatoRecurso.TEXTO).build()
+                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(TEXTO).build()
         ));
         when(usuarioService.getAuthenticatedUsuario()).thenThrow(new IllegalStateException("No autenticado"));
 
@@ -1744,7 +1750,7 @@ public class RecursoServiceTest {
     @DisplayName("eliminar: éxito cuando el autor coincide")
     void eliminar_Success_WhenOwner() {
         Usuario autor = new Usuario(); autor.setId_usuario(1);
-        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(TEXTO).build();
 
         when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(autor);
@@ -1760,7 +1766,7 @@ public class RecursoServiceTest {
     void eliminar_InvalidOwnership_Throws() {
         Usuario autor = new Usuario(); autor.setId_usuario(1);
         Usuario otro = new Usuario();  otro.setId_usuario(2);
-        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(FormatoRecurso.TEXTO).build();
+        Recurso recurso = Recurso.builder().id_recurso(100).usuario(autor).formato(TEXTO).build();
 
         when(recursoRepository.findById(100)).thenReturn(Optional.of(recurso));
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(otro);
@@ -1777,7 +1783,7 @@ public class RecursoServiceTest {
     @DisplayName("eliminar: falla si no autenticado")
     void eliminar_Unauthenticated_Throws() {
         when(recursoRepository.findById(100)).thenReturn(Optional.of(
-                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(FormatoRecurso.TEXTO).build()
+                Recurso.builder().id_recurso(100).usuario(new Usuario()).formato(TEXTO).build()
         ));
         when(usuarioService.getAuthenticatedUsuario()).thenThrow(new IllegalStateException("No autenticado"));
 

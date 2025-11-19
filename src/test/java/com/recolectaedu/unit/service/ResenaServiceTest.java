@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.access.AccessDeniedException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -112,18 +113,11 @@ public class ResenaServiceTest {
     }
 
     private void setUpAuthenication(String email, Usuario usuario) {
-        SecurityContextHolder.setContext(securityContext);
         when(usuarioService.getAuthenticatedUsuario()).thenReturn(usuario);
     }
 
     /*
     US-13: Reseñar un recurso
-     */
-    /*
-    Dado que estoy autenticado y en la página de un recurso válido,
-    y completo el formulario con contenido no vacío y un voto (positivo/negativo),
-    cuando presiono "Publicar",
-    entonces el sistema guarda la reseña asociada al recurso y a mi usuario.
      */
     @Test
     @DisplayName("Reseña: debe crear reseña correctamente")
@@ -156,13 +150,13 @@ public class ResenaServiceTest {
     @Test
     @DisplayName("crearResena: falla si no autenticado")
     void crearResena_Unauthenticated_Throws() {
-        var req = new ResenaRequestCreateDTO(1, "Comentario", true);
+        ResenaRequestCreateDTO req = new ResenaRequestCreateDTO(1, "Comentario", true);
 
         when(usuarioService.getAuthenticatedUsuario())
-                .thenThrow(new IllegalStateException("No autenticado"));
+                .thenThrow(new AccessDeniedException("No autenticado"));
 
         assertThatThrownBy(() -> resenaService.crearResena(req))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(AccessDeniedException.class)
                 .hasMessageContaining("No autenticado");
 
         verifyNoInteractions(recursoRepository, resenaRepository);
@@ -170,7 +164,7 @@ public class ResenaServiceTest {
 
     // No se permiten varias reseñas al mismo recurso
     @Test
-    @DisplayName("Reseña: debe lanzar excepción al intentar crear reseña dupulicada")
+    @DisplayName("Reseña: debe lanzar excepción al intentar crear reseña duplicada")
     void create_DuplicateData_ThrowsException() {
         Integer recurso_id = 1;
         String comentario = "Comentario de prueba";
@@ -257,10 +251,9 @@ public class ResenaServiceTest {
         when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
         setUpAuthenication(mockUsuario.getEmail(), mockUsuario);
 
-        resenaExistente.setEs_positivo(nuevoVoto);
-        resenaExistente.setActualizado_el(LocalDateTime.now());
+        Resena resenaGuardada = createResenaMock(resenaId, "Comentario original", nuevoVoto, mockUsuario, mockRecurso);
 
-        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaExistente);
+        when(resenaRepository.save(any(Resena.class))).thenReturn(resenaGuardada);
 
         ResenaResponseDTO response = resenaService.actualizarParcialResena(resenaId, request);
 
@@ -280,6 +273,7 @@ public class ResenaServiceTest {
 
         when(resenaRepository.findById(resenaId)).thenReturn(Optional.of(resenaExistente));
         Usuario otroUsuario = new Usuario();
+        otroUsuario.setId_usuario(2);
         setUpAuthenication(otroUsuario.getEmail(), otroUsuario);
 
         assertThatThrownBy(() -> resenaService.actualizarParcialResena(resenaId, request))

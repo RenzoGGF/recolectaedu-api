@@ -30,6 +30,7 @@ public class BibliotecaRecursoService {
         return BibliotecaRecursoResponseDTO.builder()
                 .id_biblioteca_recurso(bibliotecaRecurso.getId_biblioteca_recurso())
                 .titulo_recurso(bibliotecaRecurso.getRecurso().getTitulo())
+                .id_recurso(bibliotecaRecurso.getRecurso().getId_recurso())
                 .agregado_el(bibliotecaRecurso.getAgregado_el())
                 .build();
     }
@@ -103,5 +104,10 @@ public class BibliotecaRecursoService {
         if (!biblioteca.getUsuario().getId_usuario().equals(auth.getId_usuario())) {
             throw new BusinessRuleException("No autorizado para operar sobre esta biblioteca");
         }
+    }
+
+    @Transactional(readOnly = true)
+    public boolean verificarRecursoEnBiblioteca(Integer idBiblioteca, Integer idRecurso) {
+        return bibliotecaRecursoRepository.existsByBiblioteca_Id_bibliotecaAndRecurso_Id_recurso(idBiblioteca, idRecurso);
     }
 }

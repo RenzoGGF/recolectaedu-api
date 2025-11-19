@@ -17,5 +17,7 @@ public record RecursoResponse2DTO(
         LocalDateTime creado_el,
         Integer id_usuario,
         Integer id_curso,
-        String autorNombre
+        String autorNombre,
+        String nombreCurso,
+        String nombreUniversidad
 ) {}
