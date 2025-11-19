@@ -13,10 +13,14 @@ import java.util.Optional;
 @Repository
 public interface BibliotecaRecursoRepository extends JpaRepository<BibliotecaRecurso, Integer> {
     boolean existsByBibliotecaAndRecurso(Biblioteca biblioteca, Recurso recurso);
+
+    @Query("SELECT CASE WHEN COUNT(br) > 0 THEN true ELSE false END FROM BibliotecaRecurso br WHERE br.biblioteca.id_biblioteca = :idBiblioteca AND br.recurso.id_recurso = :idRecurso")
+    boolean existsByBiblioteca_Id_bibliotecaAndRecurso_Id_recurso(Integer idBiblioteca, Integer idRecurso);
+
     List<BibliotecaRecurso> findByBiblioteca(Biblioteca biblioteca);
     Optional<BibliotecaRecurso> findByBibliotecaAndRecurso(Biblioteca biblioteca, Recurso recurso);
 
     // US17 Items en la biblioteca del usuario (join: biblioteca -> usuario)
-    @Query("select count(br) from BibliotecaRecurso br where br.biblioteca.usuario.id = :userId")
+    @Query("select count(br) from BibliotecaRecurso br where br.biblioteca.usuario.id_usuario = :userId")
     long countItemsByUsuarioId(Integer userId);
 }

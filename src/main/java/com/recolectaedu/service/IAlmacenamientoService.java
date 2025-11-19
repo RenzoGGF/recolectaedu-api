@@ -1,5 +1,6 @@
 package com.recolectaedu.service;
 
+import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface IAlmacenamientoService {
@@ -19,4 +20,12 @@ public interface IAlmacenamientoService {
      * @param nombreArchivo El nombre del archivo a eliminar.
      */
     void eliminar(String nombreArchivo);
+
+    /**
+     * Carga un archivo almacenado como un recurso de Spring.
+     *
+     * @param nombreArchivo El nombre/ruta del archivo.
+     * @return El recurso listo para ser servido.
+     */
+    Resource cargarComoRecurso(String nombreArchivo);
 }

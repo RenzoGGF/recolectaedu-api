@@ -62,4 +62,10 @@ public class Recurso {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_curso", nullable = false)
     private Curso curso;
+
+    @OneToMany(mappedBy = "recurso", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BibliotecaRecurso> enBibliotecas;
+
+    @OneToMany(mappedBy = "recurso", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Resena> resenas;
 }
