@@ -1,5 +1,6 @@
 package com.recolectaedu.controller;
 
+import com.recolectaedu.dto.request.ComentarioRequestDTO;
 import com.recolectaedu.dto.request.UserRequestDTO;
 import com.recolectaedu.dto.response.*;
 import com.recolectaedu.model.enums.OrdenRecurso;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -25,6 +27,7 @@ public class PublicController {
     private final UsuarioService usuarioService;
     private final ResenaService resenaService;
     private final ForoService foroService;
+    private final ComentarioService comentarioService;
     // Endpoint para US-12
     @GetMapping("/recursos/curso/{cursoId}/recientes")
     public ResponseEntity<List<RecursoResponse2DTO>> findRecientesByCurso(@PathVariable Integer cursoId) {
@@ -131,4 +134,14 @@ public class PublicController {
         List<UniversidadRankingRecursosDTO> response = cursoService.getRankingUniversidadesPorRecursos();
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/foros/{idForo}/comentarios")
+    public ResponseEntity<List<ComentarioResponseDTO>> listarComentariosPorForo(
+            @PathVariable Integer idForo
+    ) {
+        return ResponseEntity.ok(comentarioService.listarComentariosPorForo(idForo));
+    }
+
+
+
 }
