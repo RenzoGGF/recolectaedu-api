@@ -1,11 +1,13 @@
 package com.recolectaedu.dto.request;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-import lombok.Data;
+public record ComentarioRequestDTO(
+        @NotBlank(message = "El contenido no puede estar vacío")
+        String contenido,
 
-@Data
-public class ComentarioRequestDTO {
-    private String contenido;
-    private Integer id_usuario;
-    private Integer id_foro;
-    private Integer id_comentario_padre; // Opcional
-}
+        @NotNull(message = "El ID del foro es obligatorio")
+        Integer id_foro,
+
+        Integer id_comentario_padre
+) {}

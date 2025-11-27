@@ -1,12 +1,13 @@
 package com.recolectaedu.dto.response;
 
-import lombok.Data;
 import java.time.LocalDateTime;
 
-@Data
-public class ComentarioResponseDTO {
-    private Integer id_comentario;
-    private String contenido;
-    private LocalDateTime creado_el;
-    private Integer id_usuario;
-}
+public record ComentarioResponseDTO(
+        Integer id_comentario,
+        String contenido,
+        LocalDateTime creado_el,
+        String nombreAutor,
+        String apellidoAutor,
+        Integer id_usuario,
+        Integer id_comentario_padre
+) {}
