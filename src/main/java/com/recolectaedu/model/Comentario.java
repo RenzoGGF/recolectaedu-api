@@ -20,7 +20,6 @@ public class Comentario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id_comentario;
 
-    @Lob
     @Column(nullable = false)
     private String contenido;
 
