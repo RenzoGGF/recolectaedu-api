@@ -1,9 +1,6 @@
 package com.recolectaedu.service;
 
-import com.recolectaedu.dto.response.CursoRankingAportesDTO;
-import com.recolectaedu.dto.response.CursoResponse2DTO;
-import com.recolectaedu.dto.response.CursoResponseDTO;
-import com.recolectaedu.dto.response.UniversidadRankingRecursosDTO;
+import com.recolectaedu.dto.response.*;
 import com.recolectaedu.repository.CursoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +36,10 @@ public class CursoService {
 
     public List<UniversidadRankingRecursosDTO> getRankingUniversidadesPorRecursos() {
         return cursoRepository.findRankingUniversidadesPorRecursos();
+    }
+
+    public List<UniversidadCursoCountDTO> obtenerUniversidadesConCursos() {
+        return cursoRepository.obtenerUniversidadesConConteo();
     }
 
 }

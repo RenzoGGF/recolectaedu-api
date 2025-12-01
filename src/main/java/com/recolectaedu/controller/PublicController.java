@@ -142,6 +142,10 @@ public class PublicController {
         return ResponseEntity.ok(comentarioService.listarComentariosPorForo(idForo));
     }
 
+    @GetMapping("/universidades/con-cursos")
+    public ResponseEntity<List<UniversidadCursoCountDTO>> listarUniversidadesConCursos() {
+        return ResponseEntity.ok(cursoService.obtenerUniversidadesConCursos());
+    }
 
 
 }
